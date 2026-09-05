@@ -40,6 +40,7 @@ CHAIN_RADIUS_METERS = 3.0
 SMOOTH_WINDOW = 5
 VOXEL_METERS = 2.0
 SNAP_RADIUS_METERS = 1.5
+TRACE_STEP_METERS = 1.2
 EDGE_RADIUS_METERS = 5.0
 
 
@@ -138,6 +139,52 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
 
     # 3-D keys: a 2-D (xy) voxelization collapses a near-vertical rope run
     # into one averaged point and tears the chain apart in z.
+    if rope_color is not None:
+        # STRAND TRACER (declared-color worlds): from the strand point nearest
+        # the camera, step repeatedly to the saturation^2-weighted centroid of
+        # strand splats inside a forward cone -- follows the actual rope and
+        # cannot be pulled sideways by off-line colored debris (the failure
+        # that bent South Summit's top away from the ridge line).
+        strand_tree = cKDTree(chain[:, :2])
+        position = chain[int(np.argmin(np.linalg.norm(chain[:, :2], axis=1))), :2].copy()
+        heading = None
+        waypoints_list = [position.copy()]
+        used = np.zeros(len(chain), bool)
+        for _ in range(200):
+            neighbors = np.array(strand_tree.query_ball_point(position, TRACE_STEP_METERS * 2.5,
+                                                              workers=1))
+            if len(neighbors) == 0:
+                break
+            offsets = chain[neighbors, :2] - position
+            distances = np.linalg.norm(offsets, axis=1)
+            forward = distances > 0.3
+            if heading is not None:
+                cosines = (offsets @ heading) / np.maximum(distances, 1e-9)
+                forward &= cosines > 0.2      # +/- ~78 degree cone
+            forward &= ~used[neighbors]
+            candidates = neighbors[forward]
+            if len(candidates) < 2:
+                break
+            weights = chain_weight[candidates] * distances[forward]
+            step_target = np.average(chain[candidates, :2], axis=0, weights=weights)
+            direction = step_target - position
+            norm = np.linalg.norm(direction)
+            if norm < 1e-6:
+                break
+            heading = direction / norm
+            position = position + heading * TRACE_STEP_METERS
+            used[neighbors[distances < TRACE_STEP_METERS]] = True
+            waypoints_list.append(position.copy())
+        waypoints = np.array(waypoints_list)
+        start_z = chain[int(np.argmin(np.linalg.norm(chain[:, :2], axis=1))), 2]
+        length = np.linalg.norm(np.diff(waypoints, axis=0), axis=1).sum()
+        print(f"[rope] traced {len(waypoints)} steps, {length:.0f} m along the strand")
+        output_path = os.path.join(world_directory, "trail.json")
+        json.dump({"trail_points_xy_meters": waypoints.round(3).tolist()},
+                  open(output_path, "w"))
+        print(f"[done] {output_path} -- re-run marble.build_episode to lay the rope on it")
+        return
+
     voxel = np.round(chain / VOXEL_METERS).astype(int)
     centers = {}
     for key, point, weight in zip(map(tuple, voxel), chain, chain_weight):
