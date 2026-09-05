@@ -61,8 +61,15 @@ def load_marble_vertices_faces(input_directory: str) -> tuple[np.ndarray, np.nda
     """Collider GLB -> (vertices, faces) in the MuJoCo frame, plus metadata.
 
     Output vertices: float32 (N,3) meters, x/y horizontal, z up, ground ~ z=0.
-    Mapping from Marble's raw frame: scale by metric_scale_factor, subtract
-    ground_plane_offset on raw Y, then (x, y, z)_mujoco = (x_raw, z_raw, -y_raw).
+
+    Two source frames, selected by world.json's optional "frame" key:
+    - default (API asset, Marble RAW): scale by metric_scale_factor, subtract
+      ground_plane_offset on raw Y (+Y DOWN), then
+      (x, y, z)_mujoco = (x_raw, z_raw, -y_raw).
+    - "gltf_y_up" (console download): already metric and Y-UP; the metadata
+      fields are absent, so ground_plane_offset here means the mujoco-z shift
+      that puts the ground under the camera origin at z ~ 0.
+      (x, y, z)_mujoco = (x, -z, y) - (0, 0, offset).
     """
     import trimesh
 
@@ -71,11 +78,16 @@ def load_marble_vertices_faces(input_directory: str) -> tuple[np.ndarray, np.nda
     semantics = world_record["assets"]["splats"]["semantics_metadata"]
     scale = float(semantics["metric_scale_factor"])
     ground_offset = float(semantics["ground_plane_offset"])
+    frame = world_record.get("frame", "marble_raw")
 
     mesh = trimesh.load(os.path.join(input_directory, "collider_mesh_url.glb"), force="mesh")
     raw = np.asarray(mesh.vertices, dtype=np.float64) * scale
-    raw[:, 1] -= ground_offset
-    vertices = np.stack([raw[:, 0], raw[:, 2], -raw[:, 1]], axis=1).astype(np.float32)
+    if frame == "gltf_y_up":
+        vertices = np.stack([raw[:, 0], -raw[:, 2],
+                             raw[:, 1] - ground_offset], axis=1).astype(np.float32)
+    else:
+        raw[:, 1] -= ground_offset
+        vertices = np.stack([raw[:, 0], raw[:, 2], -raw[:, 1]], axis=1).astype(np.float32)
     faces = np.asarray(mesh.faces, dtype=np.uint32)
 
     extent = vertices.max(axis=0) - vertices.min(axis=0)
@@ -139,11 +151,16 @@ def rasterize_heightfield(vertices: np.ndarray, faces: np.ndarray) -> dict:
             "resolution": GRID_RESOLUTION_METERS, "hole_fraction": float(hole_fraction)}
 
 
-def walkability(height: np.ndarray, real: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Per-cell slope (degrees) and the walkable mask (real + gentle slope)."""
+def walkability(height: np.ndarray, real: np.ndarray,
+                slope_limit_degrees: float = WALKABLE_SLOPE_LIMIT_DEGREES
+                ) -> tuple[np.ndarray, np.ndarray]:
+    """Per-cell slope (degrees) and the walkable mask (real + gentle slope).
+
+    slope_limit_degrees: 35 encodes a walker; a roped ascender tolerates
+    more -- world.json may override with walkable_slope_limit_degrees."""
     gradient_y, gradient_x = np.gradient(height, GRID_RESOLUTION_METERS)
     slope_degrees = np.degrees(np.arctan(np.hypot(gradient_x, gradient_y))).astype(np.float32)
-    walkable = real & (slope_degrees < WALKABLE_SLOPE_LIMIT_DEGREES)
+    walkable = real & (slope_degrees < slope_limit_degrees)
     histogram, _ = np.histogram(slope_degrees[real], bins=[0, 10, 20, 30, 40, 60, 90])
     print(f"[slope] walkable {walkable.mean() * 100:.1f}% of grid  "
           f"slope histogram (0-10-20-30-40-60-90 deg): {histogram.tolist()}")
@@ -313,10 +330,14 @@ def file_sha256(path: str) -> str:
 
 def build_episode(input_directory: str, output_directory: str) -> dict:
     os.makedirs(output_directory, exist_ok=True)
-    vertices, faces, _ = load_marble_vertices_faces(input_directory)
+    vertices, faces, world_record = load_marble_vertices_faces(input_directory)
     grid = rasterize_heightfield(vertices, faces)
     height, real = grid["height"], grid["real"]
-    slope_degrees, walkable = walkability(height, real)
+    slope_limit = float(world_record.get("walkable_slope_limit_degrees",
+                                         WALKABLE_SLOPE_LIMIT_DEGREES))
+    if slope_limit != WALKABLE_SLOPE_LIMIT_DEGREES:
+        print(f"[slope] world.json overrides walkable limit: {slope_limit:g} deg")
+    slope_degrees, walkable = walkability(height, real, slope_limit)
 
     override_path = os.path.join(input_directory, "trail.json")
     if os.path.exists(override_path):
