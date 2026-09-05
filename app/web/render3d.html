@@ -457,11 +457,11 @@
 { "imports": { "three": "/app/web/three/vendor/three.module.js" } }
 </script>
 <script type="module">
-import { Stage } from '/app/web/three/stage.js';
+import { Stage } from '/app/web/three/stage.js?v=glbdecor1';
 import { fnv1a32, whiteoutShare, CLEAR_VISIBILITY_METERS,
          MINIMUM_VISIBILITY_METERS, FOG_EXP2_95_PERCENT, FOG_WHITEOUT_COLOUR,
          FOG_WHITENESS_FULL_SHARE, FOG_WHITEOUT_EXPOSURE_HEADROOM }
-       from '/app/web/three/world.js';
+       from '/app/web/three/world.js?v=glbdecor1';
 
 const $ = id => document.getElementById(id);
 const canvas = $('canvas'), stage = new Stage(canvas);

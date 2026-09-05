@@ -12,7 +12,7 @@ import { ShaderPass } from './vendor/addons/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from './vendor/addons/postprocessing/UnrealBloomPass.js';
 import { SSAOPass } from './vendor/addons/postprocessing/SSAOPass.js';
 import { OutputPass } from './vendor/addons/postprocessing/OutputPass.js';
-import { World, FOG_COLOUR, FOG_DENSITY_PER_METER } from './world.js';
+import { World, FOG_COLOUR, FOG_DENSITY_PER_METER } from './world.js?v=glbdecor1';
 import { ChaseCamera } from './chase_camera.js';
 import { FirstPersonCamera, EYE_MOUNT_IN_TORSO_METERS,
          HIKER_EYE_IN_BODY_METERS, HIKER_YAW_LIMIT_DEGREES,

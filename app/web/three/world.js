@@ -585,6 +585,8 @@ export class World {
           if (object.material) object.material.envMapIntensity = 0.6;
         });
         this.root.add(decorationGltf.scene);
+        console.log('render3d: decoration GLB mounted,',
+                    decorationGltf.scene.children.length, 'top-level nodes');
         // The GLB carries its own baked ground (with the trodden trail in its
         // texture) at the same heights as the physics terrain -- hide ours so
         // they cannot z-fight. TerrainHeightField reads vertex buffers, not
