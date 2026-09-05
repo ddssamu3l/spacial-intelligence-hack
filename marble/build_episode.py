@@ -151,8 +151,15 @@ def walkability(height: np.ndarray, real: np.ndarray) -> tuple[np.ndarray, np.nd
 
 
 def solve_trail(height: np.ndarray, slope_degrees: np.ndarray,
-                walkable: np.ndarray) -> np.ndarray:
-    """Least-cost corridor path, lowest -> highest cell, as (row, col) indices.
+                walkable: np.ndarray,
+                endpoint_cells: tuple | None = None) -> np.ndarray:
+    """Least-cost corridor path as (row, col) indices.
+
+    Endpoints: lowest -> highest walkable cell by default (a walled uphill
+    corridor determines its own ends), or the author-declared pair from
+    endpoints.json when given (open terrain under-determines the destination:
+    on the Rongbuk moraine the highest walkable ground is a snow bank, not
+    the trail's end). Either way the PATH between them is solved, never given.
 
     Cost per step: base + slope penalty + wall-hugging penalty (cells closer
     than EDGE_CLEARANCE_METERS to non-walkable pay extra), so the path rides
@@ -171,15 +178,28 @@ def solve_trail(height: np.ndarray, slope_degrees: np.ndarray,
 
     clearance = ndimage.distance_transform_edt(corridor) * GRID_RESOLUTION_METERS
 
-    # Start/goal: the MOST-CENTERED cell within the lowest/highest elevation
-    # band, not the bare argmin/argmax -- a laterally flat corridor floor makes
-    # the extreme cell a corner, and the robot should spawn mid-corridor.
-    corridor_height = np.where(corridor, height, np.nan)
-    low, high = np.nanmin(corridor_height), np.nanmax(corridor_height)
-    def most_centered(band: np.ndarray) -> tuple[int, int]:
-        return np.unravel_index(np.argmax(np.where(band, clearance, -1.0)), height.shape)
-    start = most_centered(corridor & (height < low + 0.30))
-    goal = most_centered(corridor & (height > high - 0.30))
+    if endpoint_cells is not None:
+        corridor_cells = np.argwhere(corridor)
+        def snap(cell) -> tuple[int, int]:
+            distances = np.linalg.norm(corridor_cells - np.asarray(cell), axis=1)
+            nearest = corridor_cells[int(np.argmin(distances))]
+            offset = distances.min() * GRID_RESOLUTION_METERS
+            if offset > 3.0:
+                raise SystemExit(f"[trail] endpoint hint {cell} is {offset:.1f} m "
+                                 "from any walkable cell -- wrong frame?")
+            return int(nearest[0]), int(nearest[1])
+        start, goal = snap(endpoint_cells[0]), snap(endpoint_cells[1])
+        print(f"[trail] endpoints from endpoints.json (snapped to corridor)")
+    else:
+        # Start/goal: the MOST-CENTERED cell within the lowest/highest elevation
+        # band, not the bare argmin/argmax -- a laterally flat corridor floor makes
+        # the extreme cell a corner, and the robot should spawn mid-corridor.
+        corridor_height = np.where(corridor, height, np.nan)
+        low, high = np.nanmin(corridor_height), np.nanmax(corridor_height)
+        def most_centered(band: np.ndarray) -> tuple[int, int]:
+            return np.unravel_index(np.argmax(np.where(band, clearance, -1.0)), height.shape)
+        start = most_centered(corridor & (height < low + 0.30))
+        goal = most_centered(corridor & (height > high - 0.30))
     wall_penalty = np.clip(EDGE_CLEARANCE_METERS - clearance, 0.0, None) * 20.0
     step_cost = 1.0 + (slope_degrees / 10.0) ** 2 + wall_penalty
 
@@ -308,7 +328,17 @@ def build_episode(input_directory: str, output_directory: str) -> dict:
         print(f"[trail] hand override: {len(cells)} waypoints from trail.json")
         path_cells = cells
     else:
-        path_cells = solve_trail(height, slope_degrees, walkable)
+        endpoint_cells = None
+        endpoints_path = os.path.join(input_directory, "endpoints.json")
+        if os.path.exists(endpoints_path):
+            with open(endpoints_path) as handle:
+                declared = json.load(handle)
+            x0, y0 = grid["origin_xy"]
+            def to_cell(xy) -> tuple[float, float]:
+                return ((xy[1] - y0) / grid["resolution"], (xy[0] - x0) / grid["resolution"])
+            endpoint_cells = (to_cell(declared["spawn_xy_meters"]),
+                              to_cell(declared["goal_xy_meters"]))
+        path_cells = solve_trail(height, slope_degrees, walkable, endpoint_cells)
 
     trail_xyz = cells_to_world(path_cells, grid, height)
     origin_distance = float(np.linalg.norm(trail_xyz[:, :2], axis=1).min())
@@ -345,7 +375,10 @@ def build_episode(input_directory: str, output_directory: str) -> dict:
             "collider_sha256": file_sha256(os.path.join(input_directory, "collider_mesh_url.glb")),
             "world_json_sha256": file_sha256(os.path.join(input_directory, "world.json")),
             "hole_fraction": grid["hole_fraction"],
-            "trail_source": "trail.json" if os.path.exists(override_path) else "solver",
+            "trail_source": ("trail.json" if os.path.exists(override_path)
+                             else "solver+endpoints.json"
+                             if os.path.exists(os.path.join(input_directory, "endpoints.json"))
+                             else "solver"),
             "origin_distance_meters": origin_distance,
         },
     }
