@@ -1,0 +1,12 @@
+# Memo 3: instance image-goal navigation (IIN)
+- IIN grading: STOP within 0.1 m of a valid viewpoint; viewpoints grid-sampled within 1 m of object bbox with oracle visibility. Goal images: HFOV U(60,120), radius {0.5..2.0} m, object coverage >0.7 -> "object in context" by construction. [2211.15876]
+- HM3D-IIN val SR/SPL: RL 0.083/0.035; OVRL-v2 ft 0.248/0.118; Mod-IIN 0.561/0.233; IEVE 0.702/0.252; GaussNav 0.725/0.578 (pre-built map, not comparable); GauScoreMap 0.784/0.605. Zero-shot: PSL 0.230/0.114, ZSON 0.146/0.073.
+- Matching converged on sparse keypoints: SuperPoint+SuperGlue (Mod-IIN, sum-confidence >= 24.5), DISK+LightGlue (IEVE, GaussNav). GauScoreMap: CLIP for category gating, DINOv2 patch cross-attention for fine level.
+- CLIP fails at instance level (GOAT-Bench); PSL pilot: Sobel-edge layout-only agent == ZSON, frozen-CLIP-only worst ("semantic neglect").
+- Exploration before sighting is goal-BLIND in all top IIN methods (frontier / coverage RL). Exceptions: REGNav room-expert "same room as goal image?" flag: Gibson SPL 67.1 vs 47.4 (ImageNav only) [2502.10785]; SplatSearch scores frontiers with goal-image semantic context [2511.12972].
+- Memory ablation GOAT: SPL 17.6 -> 9.4 without memory.
+- GaussNav: frontier pre-pass -> 3DGS with Mask R-CNN labels -> instance clusters -> render ~3 views per candidate -> DISK+LightGlue argmax. Errors: matching 0.127 SR, grounding 0.096 SR.
+- NWM (Bar 2025): 1B CDiT, CEM N=120, 2 s horizon, LPIPS to goal; mode-collapses in unfamiliar envs. Not a scan-selector.
+- Failure taxonomy (Mod-IIN, 100 fails): 41% re-ID false negative, 23% re-ID false positive, 13% exploration, 12% localization, 11% local nav => ~64% matching. IEVE: GT segmentation lifts SR 0.702 -> 0.850.
+- 3D-Mem [2411.17735]: memory snapshots (multi-view images of co-visible object clusters) + frontier snapshots; action = discrete selection over candidates by a VLM (3.3-3.6 s/decision). Closest precedent to our loop.
+- Design implications: benchmark pooled-DINO cells vs DISK+LightGlue on raw scans for re-ID; goal-image background context is an unexploited niche at instance level (pre-register, with context-ablated control); discrete selection over seen-free-space candidates is validated; don't use NWM-style pixel imagination for scan selection.
