@@ -338,6 +338,8 @@ def run(arguments) -> str:
     # `chloe_worlds` builds her mjlab plant and drives her ONNX ascender
     # policy; every other world is untouched by its existence.
     chloe_library = chloe_worlds_module.ChloeSceneLibrary()
+    from app.harness import marble_worlds as marble_worlds_module
+    marble_library = marble_worlds_module.MarbleSceneLibrary()
 
     server = None
     if arguments.live:
@@ -375,14 +377,14 @@ def run(arguments) -> str:
         """
         name = worlds_module.resolve_world_name(name)
         kind = worlds_module.WORLD_DEFINITIONS[name]["kind"]
-        if kind in ("climb_scene", "chloe_ascender"):
+        if kind in ("climb_scene", "chloe_ascender", "marble_ascender"):
             # Two libraries, one shape. `chloe_ascender` worlds are her mjlab
             # plant and her ONNX policy (app/harness/chloe_worlds.py); they
             # present the same scene surface -- spec, model, data, terrain,
             # route, ascender, reset -- so every line below this one, the
             # guide surgery and the whole alpine dressing included, is shared.
-            library = (chloe_library if kind == "chloe_ascender"
-                       else climb_library)
+            library = {"chloe_ascender": chloe_library,
+                       "marble_ascender": marble_library}.get(kind, climb_library)
             scene, meta, definition = library.load(
                 name, on_build_start=lambda: announce_build(name))
             # THE GUIDE'S SURGERY GOES FIRST, before anything dresses the model.
@@ -413,7 +415,9 @@ def run(arguments) -> str:
                       f" {look['fog_start_meters']:.0f}-{look['fog_end_meters']:.0f} m,"
                       f" sun {look['sun']['elevation_degrees']:.0f} deg elevation,"
                       f" shadows {look['shadow_texture']}, snow on", flush=True)
-            if kind == "chloe_ascender":
+            if kind in ("chloe_ascender", "marble_ascender"):
+                # Marble worlds reuse her episode class whole: same policy,
+                # same telemetry, different plant behind the scene surface.
                 episode = chloe_worlds_module.ChloeAscenderEpisode(
                     scene, meta, definition, name, seed=arguments.seed,
                     policy_path=arguments.chloe_policy,

@@ -17,6 +17,7 @@ from app.harness.climb_worlds import (
     CLIMB_WORLD_DEFINITIONS,
     DEFAULT_CLIMB_WORLD,
 )
+from app.harness.marble_worlds import MARBLE_WORLD_DEFINITIONS
 
 # The catalogue is the walking worlds THEN Chloe's two. Her worlds carry
 # `kind: "chloe_ascender"`, which is the one thing `runtime.open_world` and
@@ -28,6 +29,9 @@ from app.harness.climb_worlds import (
 # the same scene and episode surface.
 WORLD_DEFINITIONS = dict(CLIMB_WORLD_DEFINITIONS)
 WORLD_DEFINITIONS.update(CHLOE_WORLD_DEFINITIONS)
+# Marble-generated worlds (kind "marble_ascender"): real Marble terrain, a
+# polyline rope, Chloe's episode class -- app/harness/marble_worlds.py.
+WORLD_DEFINITIONS.update(MARBLE_WORLD_DEFINITIONS)
 
 DEFAULT_WORLD_NAME = DEFAULT_CLIMB_WORLD
 

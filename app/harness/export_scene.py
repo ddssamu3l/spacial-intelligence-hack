@@ -770,7 +770,7 @@ def open_world(world_name, plain_graphics=False, with_guide=True):
                        f" have {worlds_module.world_names()}")
     definition = worlds_module.WORLD_DEFINITIONS[world_name]
     look = None
-    if definition["kind"] in ("climb_scene", "chloe_ascender"):
+    if definition["kind"] in ("climb_scene", "chloe_ascender", "marble_ascender"):
         # Chloe's worlds build a different plant behind the same scene surface
         # (app/harness/chloe_worlds.py), so everything below -- the guide
         # surgery, the alpine look, the reset, the rope -- is shared verbatim.
@@ -780,6 +780,9 @@ def open_world(world_name, plain_graphics=False, with_guide=True):
         if definition["kind"] == "chloe_ascender":
             from app.harness import chloe_worlds as chloe_worlds_module
             scene, meta, definition = chloe_worlds_module.ChloeSceneLibrary().load(world_name)
+        elif definition["kind"] == "marble_ascender":
+            from app.harness import marble_worlds as marble_worlds_module
+            scene, meta, definition = marble_worlds_module.MarbleSceneLibrary().load(world_name)
         else:
             scene, meta, definition = climb_worlds_module.ClimbSceneLibrary().load(world_name)
         # THE GUIDE'S SURGERY GOES FIRST, exactly as `runtime.open_world` does
