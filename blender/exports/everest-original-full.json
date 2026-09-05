@@ -1,0 +1,524 @@
+{
+  "source": "outputs/everest-before-realism.blend",
+  "original_objects": 2582,
+  "groups": [
+    {
+      "name": "Everest massif | Copernicus measured 30m elevations",
+      "instances": 1,
+      "vertices": 514368,
+      "baked": true
+    },
+    {
+      "name": "Foreground | metre-scale moraine & wind-sculpted snow",
+      "instances": 1,
+      "vertices": 144761,
+      "baked": true
+    },
+    {
+      "name": "Transition into surveyed landscape",
+      "instances": 1,
+      "vertices": 19881,
+      "baked": true
+    },
+    {
+      "name": "Serac 01 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 02 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 03 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 04 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 05 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 06 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 07 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 08 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 09 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 10 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Serac 11 \u2022 sculpted ice pinnacle",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.001",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.002",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.003",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.004",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.005",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.006",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.007",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.008",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.009",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.010",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.011",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.012",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.013",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.014",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.015",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.016",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.017",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.018",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.019",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.020",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.021",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.022",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.023",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.024",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.025",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.026",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.027",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.028",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.029",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.030",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.031",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.032",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Broken glacial block.033",
+      "instances": 1,
+      "vertices": 4449,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment",
+      "instances": 143,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.001",
+      "instances": 170,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.002",
+      "instances": 160,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.004",
+      "instances": 145,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.005",
+      "instances": 175,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.006",
+      "instances": 167,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.007",
+      "instances": 158,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.008",
+      "instances": 173,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.012",
+      "instances": 155,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.016",
+      "instances": 180,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.038",
+      "instances": 159,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.047",
+      "instances": 170,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.052",
+      "instances": 159,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Moraine fragment.067",
+      "instances": 167,
+      "vertices": 162,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap",
+      "instances": 21,
+      "vertices": 1188,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.002",
+      "instances": 18,
+      "vertices": 1272,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.003",
+      "instances": 14,
+      "vertices": 1108,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.004",
+      "instances": 19,
+      "vertices": 1250,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.005",
+      "instances": 25,
+      "vertices": 1156,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.007",
+      "instances": 17,
+      "vertices": 1244,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.010",
+      "instances": 14,
+      "vertices": 1218,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.011",
+      "instances": 17,
+      "vertices": 1192,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.013",
+      "instances": 13,
+      "vertices": 1138,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.014",
+      "instances": 19,
+      "vertices": 1112,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.020",
+      "instances": 22,
+      "vertices": 1220,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.044",
+      "instances": 12,
+      "vertices": 1252,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.050",
+      "instances": 14,
+      "vertices": 1154,
+      "baked": true
+    },
+    {
+      "name": "Windward snow cap.051",
+      "instances": 17,
+      "vertices": 1218,
+      "baked": true
+    },
+    {
+      "name": "Thousands of angular scree fragments",
+      "instances": 1,
+      "vertices": 48024,
+      "baked": true
+    },
+    {
+      "name": "Expedition route wand",
+      "instances": 1,
+      "vertices": 16,
+      "baked": false
+    },
+    {
+      "name": "Wind-torn red route pennant",
+      "instances": 1,
+      "vertices": 119,
+      "baked": false
+    },
+    {
+      "name": "Expedition route wand.001",
+      "instances": 1,
+      "vertices": 16,
+      "baked": false
+    },
+    {
+      "name": "Wind-torn red route pennant.001",
+      "instances": 1,
+      "vertices": 119,
+      "baked": false
+    },
+    {
+      "name": "Expedition route wand.002",
+      "instances": 1,
+      "vertices": 16,
+      "baked": false
+    },
+    {
+      "name": "Wind-torn red route pennant.002",
+      "instances": 1,
+      "vertices": 119,
+      "baked": false
+    },
+    {
+      "name": "Expedition route wand.003",
+      "instances": 1,
+      "vertices": 16,
+      "baked": false
+    },
+    {
+      "name": "Wind-torn red route pennant.003",
+      "instances": 1,
+      "vertices": 119,
+      "baked": false
+    }
+  ],
+  "units": "meters",
+  "coordinate_system": "glTF right-handed Y-up",
+  "source_to_gltf": "(x, y, z) -> (x, z, -y)",
+  "attribution": "Contains modified Copernicus DEM GLO-30 (2021), European Union, DLR and Airbus. Poly Haven textures: CC0.",
+  "limitations": "Shared rock instances reuse a prototype material bake. Renderer tone mapping and environment lighting may differ from Cycles. Visual terrain, not validated robot collisions.",
+  "exported_objects": 2583,
+  "file": "everest-original-full.glb",
+  "bytes": 275171360
+}
