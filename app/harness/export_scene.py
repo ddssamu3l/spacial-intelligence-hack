@@ -958,6 +958,33 @@ def export_world(world_name, output_directory=SCENE_ASSETS_DIRECTORY,
               f"{os.path.getsize(decoration_glb_path) / 1e6:.1f} MB copied whole "
               f"(textured layer, loaded by the viewer directly)")
 
+    # Gaussian splats as the visual world (user's call 2026-09-05: splats for
+    # visuals, heightfield for physics). The world_meshes dir (from episode
+    # provenance) may hold splats.spz; publish it whole and let the viewer
+    # render it with the vendored Spark runtime.
+    splats_url = None
+    splats_z_offset = 0.0
+    if decoration_directory:
+        episode_path = os.path.join(decoration_directory, "episode.json")
+        if os.path.exists(episode_path):
+            with open(episode_path) as handle:
+                episode_record = json.load(handle)
+            input_directory = episode_record.get("provenance", {}).get("input_directory", "")
+            spz_path = os.path.join(input_directory, "splats.spz")
+            world_json_path = os.path.join(input_directory, "world.json")
+            if os.path.exists(spz_path) and os.path.exists(world_json_path):
+                with open(world_json_path) as handle:
+                    world_record = json.load(handle)
+                if world_record.get("frame") == "gltf_y_up":
+                    copied = f"{world_name}__splats.spz"
+                    shutil.copyfile(spz_path, os.path.join(output_directory, copied))
+                    splats_url = f"/app/harness/scene_assets/{copied}"
+                    splats_z_offset = float(world_record["assets"]["splats"]
+                                            ["semantics_metadata"]["ground_plane_offset"])
+                    print(f"[export]   splats.spz: "
+                          f"{os.path.getsize(spz_path) / 1e6:.1f} MB published "
+                          f"(z offset {splats_z_offset:+.2f} m)")
+
     glb_path = os.path.join(output_directory, f"{world_name}.glb")
     total_bytes = builder.write(glb_path, root_nodes)
 
@@ -1001,6 +1028,8 @@ def export_world(world_name, output_directory=SCENE_ASSETS_DIRECTORY,
                     if terrain_report else None),
         "terrain_nodes": terrain_node_names,
         "decoration_glb": decoration_glb_url,
+        "splats_url": splats_url,
+        "splats_z_offset_meters": splats_z_offset,
         # Display-only: the measured Lhotse relief laid over a smooth physics
         # ground. Null on worlds whose ground already has shape of its own.
         "snow_shell": snow_report,

@@ -597,6 +597,26 @@ export class World {
       }
     }
 
+    // Gaussian splats as the visual world (Spark, vendored): the splats ARE
+    // the generated world's true appearance; physics rides the heightfield
+    // underneath, whose skin goes invisible (TerrainHeightField still reads
+    // the hidden mesh, so the chase camera behaves).
+    if (sidecar.splats_url) {
+      try {
+        const { SplatMesh } = await import('./vendor/spark.module.js?v=1');
+        const splats = new SplatMesh({ url: sidecar.splats_url });
+        // SPZ is Y-up; the world here is Z-up. Same +90 deg X mapping as the
+        // decoration GLB, then drop by the world's ground anchor.
+        splats.rotation.x = Math.PI / 2;
+        splats.position.z = -(sidecar.splats_z_offset_meters || 0);
+        this.root.add(splats);
+        console.log('render3d: splat world mounted from', sidecar.splats_url);
+        for (const mesh of this.terrainMeshes) mesh.visible = false;
+      } catch (error) {
+        console.warn('render3d: splat world failed to load', error);
+      }
+    }
+
     this.heightField = this.terrainMeshes.length
       ? new TerrainHeightField(this.terrainMeshes) : null;
 
