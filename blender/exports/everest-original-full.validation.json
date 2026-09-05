@@ -1,0 +1,13 @@
+{
+  "file": "everest-original-full.glb",
+  "bytes": 275171360,
+  "sha256": "eac2a936dcb092171469a1c81f3c120f3372cda53b9fc6cb9ff53c639fc4242f",
+  "source_mesh_objects": 2580,
+  "exported_mesh_nodes": 2581,
+  "shared_meshes": 86,
+  "embedded_images": 231,
+  "materials": 81,
+  "cameras": 1,
+  "lights": 1,
+  "external_resources": 0
+}

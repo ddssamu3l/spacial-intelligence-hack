@@ -21,7 +21,7 @@ try{
  await page.keyboard.press('Escape');await expect(page.locator('#welcome')).toBeVisible();await page.waitForTimeout(350);
  const paused=await page.locator('#viewport').getAttribute('data-position');await page.keyboard.press('w');await page.waitForTimeout(350);if(paused!==await page.locator('#viewport').getAttribute('data-position'))throw Error('Camera moved while paused');
  await page.getByRole('button',{name:'Back to trail start'}).click();
- await page.waitForTimeout(350);const reset=JSON.parse(await page.locator('#viewport').getAttribute('data-position'));if(Math.abs(reset[1]+12)>.001)throw Error('Reset failed');
+ await page.waitForTimeout(350);const reset=JSON.parse(await page.locator('#viewport').getAttribute('data-position'));if(Math.abs(reset[1]-JSON.parse(initial)[1])>.001)throw Error('Reset failed');
  await page.getByLabel('Display').selectOption('high');await page.waitForTimeout(250);
  if(errors.length)throw Error(errors.join('\n'));
  await writeFile('artifacts/browser-check.json',JSON.stringify({initial,after,reset,errors},null,2));
