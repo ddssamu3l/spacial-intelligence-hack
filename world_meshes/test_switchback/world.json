@@ -1,0 +1,11 @@
+{
+ "world_id": "synthetic-test-switchback",
+ "assets": {
+  "splats": {
+   "semantics_metadata": {
+    "metric_scale_factor": 1.3702,
+    "ground_plane_offset": 1.12
+   }
+  }
+ }
+}

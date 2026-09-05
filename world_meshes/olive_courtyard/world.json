@@ -1,0 +1,40 @@
+{
+ "world_id": "aad4fd44-85a5-4c0a-82e8-472a65a5034b",
+ "display_name": "",
+ "tags": null,
+ "assets": {
+  "mesh": {
+   "collider_mesh_url": "https://cdn.marble.worldlabs.ai/aad4fd44-85a5-4c0a-82e8-472a65a5034b/7b593060.glb",
+   "hq_mesh_url": null,
+   "full_res_mesh_url": null
+  },
+  "imagery": {
+   "pano_url": "https://cdn.marble.worldlabs.ai/aad4fd44-85a5-4c0a-82e8-472a65a5034b/7263fa6b-e43d-4ccc-85b3-b20ebb197ed6_panos/rgb_0.png"
+  },
+  "splats": {
+   "spz_urls": {
+    "500k": "https://cdn.marble.worldlabs.ai/aad4fd44-85a5-4c0a-82e8-472a65a5034b/7ca374ec-895e-453e-a7a0-064b75035590_ceramic_500k.spz",
+    "100k": "https://cdn.marble.worldlabs.ai/aad4fd44-85a5-4c0a-82e8-472a65a5034b/1b525189-fa84-4033-aa77-9b4d40a284ad_dust_100k.spz",
+    "150k": "https://cdn.marble.worldlabs.ai/aad4fd44-85a5-4c0a-82e8-472a65a5034b/92fb0e36-a045-4768-9405-989b5b10e3b1_ceramic_150k.spz",
+    "full_res": "https://cdn.marble.worldlabs.ai/aad4fd44-85a5-4c0a-82e8-472a65a5034b/3226d2cc-648f-436a-a1e4-d1a13cdfe8ea_ceramic.spz"
+   },
+   "semantics_metadata": {
+    "metric_scale_factor": 1.2596934,
+    "ground_plane_offset": 1.5055473
+   }
+  },
+  "thumbnail_url": "https://cdn.marble.worldlabs.ai/aad4fd44-85a5-4c0a-82e8-472a65a5034b/baca1c2f-4e49-49a0-b176-6df67592a3ee_sand_mpi/thumbnail.webp",
+  "caption": "The scene is a luxurious and expansive living area, captured in a realistic style, exuding an elegant and contemporary atmosphere. The overall tone is sophisticated and inviting, with a focus on natural light and open-plan living. The room features high ceilings and large sliding glass doors that seamlessly connect the indoor space with an outdoor patio area. A long, live-edge wooden console table, with a natural, irregular shape and warm wood grain, serves as a prominent focal point in the foreground. On this table, a large blue ceramic pot holds an arrangement of hydrangeas and other greenery, flanked by two small, white, mushroom-shaped lamps with warm, soft light. Two large grey sofas, upholstered in a soft fabric, are arranged to create distinct seating areas, each adorned with plush throw pillows in varying shades of grey and light blue. One sofa faces towards a television mounted on a light-colored, textured wall, which also features a fireplace with a simple, modern design. Several small, black, cylindrical side tables with fluted bases are interspersed among the seating, holding small white floral arrangements. Light-colored wooden floors with visible grain stretch across the entire main living area, leading into an open-concept kitchen space. The kitchen features sleek, light-toned cabinetry that extends to the ceiling, a large island with dark bar stools, and modern pendant lights hanging above it. Beyond the kitchen, a hallway with recessed lighting leads to other areas of the home, suggesting a multi-level dwelling. The outdoor patio area, visible through the glass doors, is furnished with modern outdoor sofas and a large olive tree planted in a central bed with artificial turf and stepping stones. The olive tree is positioned at the center of the patio area, which is enclosed by privacy walls and lush greenery. The black cylindrical side tables are placed strategically next to the grey sofas, providing convenient surfaces for drinks and decor. The live-edge wooden console table is situated directly behind one of the grey sofas. The 360 scene is faultless."
+ },
+ "created_at": null,
+ "updated_at": null,
+ "permission": {
+  "public": false,
+  "allowed_readers": [],
+  "allowed_writers": [],
+  "allow_id_access": false
+ },
+ "world_prompt": null,
+ "world_marble_url": "https://marble.worldlabs.ai/world/aad4fd44-85a5-4c0a-82e8-472a65a5034b",
+ "model": null
+}
