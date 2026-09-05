@@ -39,6 +39,7 @@ LINEARITY_SHARE = 0.85
 CHAIN_RADIUS_METERS = 3.0
 SMOOTH_WINDOW = 5
 VOXEL_METERS = 2.0
+SNAP_RADIUS_METERS = 1.5
 EDGE_RADIUS_METERS = 5.0
 
 
@@ -80,6 +81,24 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
     # more saturated than color bleed on nearby snow; squared, it dominates
     # the voxel centerline means below.
     saturation = (rgb.max(axis=1) - rgb.min(axis=1))[candidate].astype(np.float64)
+    # the white-color-white signature (user's rule): a rope is a colored
+    # strand whose immediate SURROUNDINGS are bright snow. Each candidate is
+    # weighted by the whiteness of its non-candidate neighborhood, so colored
+    # patches inside colored regions (rock, gear piles) fade.
+    from scipy.spatial import cKDTree as _tree
+    background = mujoco[~candidate & (alpha > ALPHA_FLOOR)]
+    background_color = rgb[~candidate & (alpha > ALPHA_FLOOR)]
+    background_tree = _tree(background)
+    whiteness = np.full(len(points), 0.5)
+    for index, neighbors in enumerate(background_tree.query_ball_point(
+            points, 0.8, workers=1)):
+        if len(neighbors) >= 3:
+            neighbor_rgb = background_color[neighbors]
+            brightness = neighbor_rgb.mean()
+            neighbor_chroma = (neighbor_rgb.max(axis=1) - neighbor_rgb.min(axis=1)).mean()
+            whiteness[index] = float(np.clip(brightness - neighbor_chroma, 0.0, 1.0))
+    saturation = saturation * (0.25 + whiteness)
+    print(f"[rope] white-surround weighting: median whiteness {np.median(whiteness):.2f}")
     print(f"[rope] {candidate.sum()} {rope_color or 'saturated'} surface-hugging splats")
 
     # The linearity gate exists to reject saturated ROCK on mixed worlds; a
@@ -179,6 +198,36 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
     waypoints = np.stack([
         np.convolve(np.pad(ordered[:, axis], pad, mode="edge"), kernel, mode="valid")
         for axis in (0, 1)], axis=1)
+    # SNAP: the voxel route is only ~2 m accurate; pull every waypoint to
+    # the weighted centroid of the actual rope splats around it.
+    chain_tree = cKDTree(chain[:, :2])
+    snapped = waypoints.copy()
+    snap_success = np.zeros(len(waypoints), bool)
+    snap_distances = []
+    for index, waypoint in enumerate(waypoints):
+        for radius in (SNAP_RADIUS_METERS, 3.0, 5.0):
+            neighbors = chain_tree.query_ball_point(waypoint, radius, workers=1)
+            if len(neighbors) >= 3:
+                weights = chain_weight[neighbors]
+                snapped[index] = np.average(chain[neighbors, :2], axis=0, weights=weights)
+                snap_distances.append(np.linalg.norm(snapped[index] - waypoint))
+                snap_success[index] = True
+                break
+    # the visible rope ends where its splats end: waypoints past the last
+    # snappable one are voxel extrapolation, and they are what made the laid
+    # line diverge at the top -- drop them.
+    if snap_success.any():
+        last = int(np.nonzero(snap_success)[0][-1])
+        if last + 1 < len(snapped):
+            print(f"[rope] trimmed {len(snapped) - last - 1} unsnappable tail waypoints")
+        snapped = snapped[:last + 1]
+    print(f"[rope] snapped {snap_success.sum()}/{len(waypoints)} waypoints, "
+          f"median pull {np.median(snap_distances):.2f} m")
+    waypoints = np.stack([
+        np.convolve(np.pad(snapped[:, axis], 1, mode="edge"),
+                    np.ones(3) / 3, mode="valid")
+        for axis in (0, 1)], axis=1)
+
     length = np.linalg.norm(np.diff(waypoints, axis=0), axis=1).sum()
     climb = ordered[-1, 2] - ordered[0, 2]
     print(f"[rope] trail: {len(waypoints)} waypoints, {length:.0f} m, climbs {climb:+.1f} m")

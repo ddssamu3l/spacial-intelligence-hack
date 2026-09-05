@@ -13,5 +13,6 @@
  "walkable_slope_limit_degrees": 60.0,
  "geometry_source": "splats",
  "grid_resolution_meters": 0.15,
- "rope_color": "red"
+ "rope_color": "red",
+ "display_name": "Bergschrund at 6400m"
 }

@@ -498,6 +498,7 @@ def build_episode(input_directory: str, output_directory: str) -> dict:
                                  - trail_xyz[0, :2])[::-1]))
     episode = {
         "episode_name": os.path.basename(os.path.normpath(output_directory)),
+        "display_name": world_record.get("display_name"),
         "frame": "mujoco: x,y horizontal meters, z up meters, ground near z=0",
         "heightfield": {"origin_xy": grid["origin_xy"], "resolution_meters": grid["resolution"],
                         "shape_rows_columns": list(height.shape)},

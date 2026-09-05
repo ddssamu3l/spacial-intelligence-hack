@@ -23,5 +23,6 @@
  "provenance_note": "Console download, metric Y-up; ground ~1 m under camera; cropped to the red-rope core (96% of rope splats within 60 m of origin), full world is 600x400 m of backdrop.",
  "rope_color": "red",
  "geometry_source": "splats",
- "grid_resolution_meters": 0.15
+ "grid_resolution_meters": 0.15,
+ "display_name": "South Summit"
 }

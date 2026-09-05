@@ -450,9 +450,10 @@ def _scan_definitions() -> dict:
                                                  axis=1)))
         slope = float(np.degrees(np.arctan2(abs(climb), max(1e-6, horizontal))))
         source = episode.get("provenance", {}).get("trail_source", "solver")
+        display_name = episode.get("display_name") or entry
         definitions[f"marble_{entry}"] = {
             "kind": "marble_ascender",
-            "label": f"Marble · {entry} · {slope:.0f}°",
+            "label": f"Marble · {display_name} · {slope:.0f}°",
             "patch": "plane",
             "robot": "ascender",
             "rope": True,
