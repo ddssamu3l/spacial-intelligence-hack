@@ -1,0 +1,33 @@
+{
+  "scene": "EVEREST | East Rongbuk \u2014 visual study",
+  "objects": 2582,
+  "render": [
+    3840,
+    2160
+  ],
+  "samples": 128,
+  "packed_images": [
+    "aerial_rocks_02_diff_4k.jpg",
+    "aerial_rocks_02_nor_gl_4k.jpg",
+    "aerial_rocks_02_rough_4k.jpg",
+    "rock_boulder_cracked_diff_4k.jpg",
+    "rock_boulder_cracked_nor_gl_4k.jpg",
+    "rock_boulder_cracked_rough_4k.jpg",
+    "snow_02_diff_4k.jpg",
+    "snow_02_nor_gl_4k.jpg",
+    "snow_02_rough_4k.jpg"
+  ],
+  "camera": [
+    0.0,
+    -16.0,
+    2.0999999046325684
+  ],
+  "foreground": "reconstructed moraine and glacier, metre units",
+  "backdrop": "Copernicus GLO-30 with local transition adjusted",
+  "not_yet_implemented": [
+    "robot",
+    "collision shapes",
+    "locomotion policy",
+    "surveyed close-range geometry"
+  ]
+}

@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {Walker,groundHeight} from '../src/walker.js';
+import {readFileSync} from 'node:fs';
+const ground={nx:241,ny:321,xmin:-60,ymin:-30,step:.5,values:new Float32Array(241*321)};
+test('forward movement follows yaw and remains at eye height',()=>{const w=new Walker(ground,[]);for(let i=0;i<60;i++)w.step(1/60,1,0);assert.ok(Math.abs(w.y+9.8)<.001);assert.equal(w.z,1.75);w.yaw=Math.PI/2;const x=w.x;w.step(.05,1,0);assert.ok(w.x>x);});
+test('diagonal movement is normalized',()=>{const a=new Walker(ground,[]),b=new Walker(ground,[]);a.step(.05,1,0);b.step(.05,1,1);assert.ok(Math.abs(a.distance-b.distance)<1e-8);});
+test('large ice cylinder blocks walking through its interior',()=>{const w=new Walker(ground,[{x:-1.4,y:-8,radius:1,bottom:-1,top:8}]);for(let i=0;i<300;i++)w.step(1/60,1,0);assert.ok(w.y<=-9.29);});
+test('real exported trail supports a grounded 30 metre walk',()=>{const manifest=JSON.parse(readFileSync(new URL('../public/scene/scene.json',import.meta.url)));const file=readFileSync(new URL('../public/scene/geometry.bin',import.meta.url));const {offset,count}=manifest.ground.heights;const heights=new Float32Array(file.buffer.slice(file.byteOffset+offset,file.byteOffset+offset+count*4));const g={...manifest.ground,values:heights};const w=new Walker(g,manifest.obstacles);for(let i=0;i<900;i++){const target=2.2*Math.sin(w.y*.048)+.024*w.y;w.yaw=Math.atan2((target-w.x)*.5,1);w.step(1/60,1,0);assert.ok(Number.isFinite(w.z));assert.ok(Math.abs(w.z-groundHeight(g,w.x,w.y)-1.75)<1e-6);}assert.ok(w.y>15,`Walker blocked at ${w.y}`);});
+test('reset and trail limits prevent leaving the modeled foreground',()=>{const w=new Walker(ground,[]);w.y=130;w.step(.05,1,0);assert.equal(w.y,130);w.reset();assert.equal(w.y,-12);assert.equal(w.distance,0);});

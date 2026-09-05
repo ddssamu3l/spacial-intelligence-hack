@@ -1,0 +1,29 @@
+{
+  "snow_02": {
+    "source": "https://polyhaven.com/a/snow_02",
+    "license": "CC0",
+    "maps": {
+      "diff": "assets/textures/snow_02_diff_4k.jpg",
+      "rough": "assets/textures/snow_02_rough_4k.jpg",
+      "nor_gl": "assets/textures/snow_02_nor_gl_4k.jpg"
+    }
+  },
+  "rock_boulder_cracked": {
+    "source": "https://polyhaven.com/a/rock_boulder_cracked",
+    "license": "CC0",
+    "maps": {
+      "diff": "assets/textures/rock_boulder_cracked_diff_4k.jpg",
+      "rough": "assets/textures/rock_boulder_cracked_rough_4k.jpg",
+      "nor_gl": "assets/textures/rock_boulder_cracked_nor_gl_4k.jpg"
+    }
+  },
+  "aerial_rocks_02": {
+    "source": "https://polyhaven.com/a/aerial_rocks_02",
+    "license": "CC0",
+    "maps": {
+      "diff": "assets/textures/aerial_rocks_02_diff_4k.jpg",
+      "rough": "assets/textures/aerial_rocks_02_rough_4k.jpg",
+      "nor_gl": "assets/textures/aerial_rocks_02_nor_gl_4k.jpg"
+    }
+  }
+}
