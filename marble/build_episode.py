@@ -90,10 +90,119 @@ def load_marble_vertices_faces(input_directory: str) -> tuple[np.ndarray, np.nda
         vertices = np.stack([raw[:, 0], raw[:, 2], -raw[:, 1]], axis=1).astype(np.float32)
     faces = np.asarray(mesh.faces, dtype=np.uint32)
 
+    crop = world_record.get("crop_xy_meters")
+    if crop:
+        (x_min, x_max), (y_min, y_max) = crop
+        centroids = vertices[faces].mean(axis=1)
+        keep = ((centroids[:, 0] > x_min) & (centroids[:, 0] < x_max)
+                & (centroids[:, 1] > y_min) & (centroids[:, 1] < y_max))
+        faces = faces[keep]
+        used, inverse = np.unique(faces.reshape(-1), return_inverse=True)
+        vertices, faces = vertices[used], inverse.reshape(-1, 3).astype(np.uint32)
+        print(f"[load] crop x [{x_min},{x_max}] y [{y_min},{y_max}]: "
+              f"{keep.sum()} of {len(keep)} faces kept")
+
     extent = vertices.max(axis=0) - vertices.min(axis=0)
     print(f"[load] scale {scale:.4f}  camera_height {ground_offset:.2f} m  "
           f"tris {len(faces)}  extent x {extent[0]:.1f} y {extent[1]:.1f} z {extent[2]:.1f} m")
     return vertices, faces, world_record
+
+
+def load_splat_points(input_directory: str, world_record: dict) -> np.ndarray:
+    """splats.spz -> surface points in the MuJoCo frame (crop applied).
+
+    The splats are the world's DENSE surface truth (~2M points) where the
+    collider is a coarse proxy; a world.json with "geometry_source": "splats"
+    builds its heightfield from these instead. Same frame handling as the
+    collider path (only gltf_y_up console downloads are wired)."""
+    from marble.paint_collider_from_splats import load_spz
+
+    if world_record.get("frame") != "gltf_y_up":
+        raise SystemExit("[load] splat geometry is only wired for gltf_y_up")
+    semantics = world_record["assets"]["splats"]["semantics_metadata"]
+    ground_offset = float(semantics["ground_plane_offset"])
+    positions, _, alpha = load_spz(os.path.join(input_directory, "splats.spz"))
+    points = np.stack([positions[:, 0], -positions[:, 2],
+                       positions[:, 1] - ground_offset], axis=1)[alpha > 0.3]
+    crop = world_record.get("crop_xy_meters")
+    if crop:
+        (x_min, x_max), (y_min, y_max) = crop
+        inside = ((points[:, 0] > x_min) & (points[:, 0] < x_max)
+                  & (points[:, 1] > y_min) & (points[:, 1] < y_max))
+        points = points[inside]
+    print(f"[load] {len(points)} splat surface points after alpha/crop")
+    return points
+
+
+def _bin_percentile(points: np.ndarray, x_low: float, y_low: float,
+                    resolution: float, rows: int, columns: int,
+                    percentile: float) -> np.ndarray:
+    column_of = np.clip(((points[:, 0] - x_low) / resolution).astype(int), 0, columns - 1)
+    row_of = np.clip(((points[:, 1] - y_low) / resolution).astype(int), 0, rows - 1)
+    flat = row_of * columns + column_of
+    order = np.argsort(flat)
+    flat_sorted, z_sorted = flat[order], points[order, 2]
+    boundaries = np.searchsorted(flat_sorted, np.arange(rows * columns + 1))
+    height = np.full(rows * columns, np.nan, dtype=np.float32)
+    occupied = np.nonzero(np.diff(boundaries))[0]
+    for cell in occupied:
+        height[cell] = np.percentile(z_sorted[boundaries[cell]:boundaries[cell + 1]],
+                                     percentile)
+    return height.reshape(rows, columns)
+
+
+def rasterize_heightfield_from_points(points: np.ndarray, resolution: float) -> dict:
+    """Sky-robust two-pass surface from splat centers; holes inpainted.
+
+    Splat clouds contain the SKY as well as the ground, and one sky splat in
+    an otherwise-empty cell poisons any single-pass statistic (measured: 90%
+    holes and a z-median 9 m high). Pass one takes a 10th-percentile ground
+    consensus on a 1 m grid; everything more than SKY_CLEARANCE above that
+    consensus is discarded as sky/floaters; pass two bins the survivors at
+    the target resolution (30th percentile: the LOW surface, matching the
+    collider path's bottom-up raycast convention).
+    Same output contract as rasterize_heightfield."""
+    SKY_CLEARANCE_METERS = 3.0
+    x_low, y_low = points[:, 0].min(), points[:, 1].min()
+    coarse = 1.0
+    coarse_columns = int(np.ceil((points[:, 0].max() - x_low) / coarse)) + 1
+    coarse_rows = int(np.ceil((points[:, 1].max() - y_low) / coarse)) + 1
+    ground = _bin_percentile(points, x_low, y_low, coarse, coarse_rows,
+                             coarse_columns, 10.0)
+    coarse_row = np.clip(((points[:, 1] - y_low) / coarse).astype(int), 0, coarse_rows - 1)
+    coarse_column = np.clip(((points[:, 0] - x_low) / coarse).astype(int), 0, coarse_columns - 1)
+    local_ground = ground[coarse_row, coarse_column]
+    surface = points[np.isfinite(local_ground)
+                     & (points[:, 2] < local_ground + SKY_CLEARANCE_METERS)]
+    print(f"[hfield] sky filter kept {len(surface)} of {len(points)} points "
+          f"(<{SKY_CLEARANCE_METERS} m above the 1 m ground consensus)")
+    points = surface
+    x_low, y_low = points[:, 0].min(), points[:, 1].min()
+    columns = int(np.ceil((points[:, 0].max() - x_low) / resolution)) + 1
+    rows = int(np.ceil((points[:, 1].max() - y_low) / resolution)) + 1
+    height = _bin_percentile(points, x_low, y_low, resolution, rows, columns, 30.0)
+    real = np.isfinite(height)
+    hole_fraction = 1.0 - real.mean()
+
+    filled = height.copy()
+    for _ in range(max(rows, columns)):
+        missing = np.isnan(filled)
+        if not missing.any():
+            break
+        padded = np.pad(filled, 1, constant_values=np.nan)
+        stack = np.stack([padded[dr:dr + rows, dc:dc + columns]
+                          for dr in range(3) for dc in range(3)])
+        with np.errstate(invalid="ignore"):
+            neighbor_mean = np.nanmean(stack, axis=0)
+        filled[missing] = neighbor_mean[missing]
+    filled = np.nan_to_num(filled, nan=float(np.nanmedian(height)))
+
+    finite = height[real]
+    print(f"[hfield] grid {columns}x{rows} @ {resolution} m (from splats)  "
+          f"holes {hole_fraction * 100:.1f}%  z range {finite.min():.2f}..{finite.max():.2f} m  "
+          f"z median {np.median(finite):.2f} m")
+    return {"height": filled, "real": real, "origin_xy": (float(x_low), float(y_low)),
+            "resolution": resolution, "hole_fraction": float(hole_fraction)}
 
 
 def rasterize_heightfield(vertices: np.ndarray, faces: np.ndarray) -> dict:
@@ -152,13 +261,14 @@ def rasterize_heightfield(vertices: np.ndarray, faces: np.ndarray) -> dict:
 
 
 def walkability(height: np.ndarray, real: np.ndarray,
-                slope_limit_degrees: float = WALKABLE_SLOPE_LIMIT_DEGREES
+                slope_limit_degrees: float = WALKABLE_SLOPE_LIMIT_DEGREES,
+                resolution: float = GRID_RESOLUTION_METERS
                 ) -> tuple[np.ndarray, np.ndarray]:
     """Per-cell slope (degrees) and the walkable mask (real + gentle slope).
 
     slope_limit_degrees: 35 encodes a walker; a roped ascender tolerates
     more -- world.json may override with walkable_slope_limit_degrees."""
-    gradient_y, gradient_x = np.gradient(height, GRID_RESOLUTION_METERS)
+    gradient_y, gradient_x = np.gradient(height, resolution)
     slope_degrees = np.degrees(np.arctan(np.hypot(gradient_x, gradient_y))).astype(np.float32)
     walkable = real & (slope_degrees < slope_limit_degrees)
     histogram, _ = np.histogram(slope_degrees[real], bins=[0, 10, 20, 30, 40, 60, 90])
@@ -169,7 +279,8 @@ def walkability(height: np.ndarray, real: np.ndarray,
 
 def solve_trail(height: np.ndarray, slope_degrees: np.ndarray,
                 walkable: np.ndarray,
-                endpoint_cells: tuple | None = None) -> np.ndarray:
+                endpoint_cells: tuple | None = None,
+                resolution: float = GRID_RESOLUTION_METERS) -> np.ndarray:
     """Least-cost corridor path as (row, col) indices.
 
     Endpoints: lowest -> highest walkable cell by default (a walled uphill
@@ -191,16 +302,16 @@ def solve_trail(height: np.ndarray, slope_degrees: np.ndarray,
     sizes = ndimage.sum(walkable, labels, index=np.arange(1, component_count + 1))
     corridor = labels == (1 + int(np.argmax(sizes)))
     print(f"[trail] walkable components {component_count}, largest "
-          f"{corridor.sum() * GRID_RESOLUTION_METERS ** 2:.1f} m^2")
+          f"{corridor.sum() * resolution ** 2:.1f} m^2")
 
-    clearance = ndimage.distance_transform_edt(corridor) * GRID_RESOLUTION_METERS
+    clearance = ndimage.distance_transform_edt(corridor) * resolution
 
     if endpoint_cells is not None:
         corridor_cells = np.argwhere(corridor)
         def snap(cell) -> tuple[int, int]:
             distances = np.linalg.norm(corridor_cells - np.asarray(cell), axis=1)
             nearest = corridor_cells[int(np.argmin(distances))]
-            offset = distances.min() * GRID_RESOLUTION_METERS
+            offset = distances.min() * resolution
             if offset > 3.0:
                 raise SystemExit(f"[trail] endpoint hint {cell} is {offset:.1f} m "
                                  "from any walkable cell -- wrong frame?")
@@ -255,7 +366,7 @@ def solve_trail(height: np.ndarray, slope_degrees: np.ndarray,
     path_array = np.array(path, dtype=np.int64)
 
     climb = height[goal] - height[start]
-    length = len(path_array) * GRID_RESOLUTION_METERS
+    length = len(path_array) * resolution
     print(f"[trail] path {len(path_array)} cells (~{length:.1f} m), climbs {climb:.2f} m, "
           f"mean slope on path {slope_degrees[path_array[:, 0], path_array[:, 1]].mean():.1f} deg")
     return path_array
@@ -330,14 +441,22 @@ def file_sha256(path: str) -> str:
 
 def build_episode(input_directory: str, output_directory: str) -> dict:
     os.makedirs(output_directory, exist_ok=True)
-    vertices, faces, world_record = load_marble_vertices_faces(input_directory)
-    grid = rasterize_heightfield(vertices, faces)
+    with open(os.path.join(input_directory, "world.json")) as handle:
+        world_record = json.load(handle)
+    if world_record.get("geometry_source") == "splats":
+        points = load_splat_points(input_directory, world_record)
+        resolution = float(world_record.get("grid_resolution_meters", 0.10))
+        grid = rasterize_heightfield_from_points(points, resolution)
+    else:
+        vertices, faces, world_record = load_marble_vertices_faces(input_directory)
+        grid = rasterize_heightfield(vertices, faces)
+    resolution = grid["resolution"]
     height, real = grid["height"], grid["real"]
     slope_limit = float(world_record.get("walkable_slope_limit_degrees",
                                          WALKABLE_SLOPE_LIMIT_DEGREES))
     if slope_limit != WALKABLE_SLOPE_LIMIT_DEGREES:
         print(f"[slope] world.json overrides walkable limit: {slope_limit:g} deg")
-    slope_degrees, walkable = walkability(height, real, slope_limit)
+    slope_degrees, walkable = walkability(height, real, slope_limit, resolution)
 
     override_path = os.path.join(input_directory, "trail.json")
     if os.path.exists(override_path):
@@ -359,7 +478,8 @@ def build_episode(input_directory: str, output_directory: str) -> dict:
                 return ((xy[1] - y0) / grid["resolution"], (xy[0] - x0) / grid["resolution"])
             endpoint_cells = (to_cell(declared["spawn_xy_meters"]),
                               to_cell(declared["goal_xy_meters"]))
-        path_cells = solve_trail(height, slope_degrees, walkable, endpoint_cells)
+        path_cells = solve_trail(height, slope_degrees, walkable, endpoint_cells,
+                                 resolution)
 
     trail_xyz = cells_to_world(path_cells, grid, height)
     origin_distance = float(np.linalg.norm(trail_xyz[:, :2], axis=1).min())
@@ -393,7 +513,11 @@ def build_episode(input_directory: str, output_directory: str) -> dict:
         "provenance": {
             "script_version": SCRIPT_VERSION,
             "input_directory": os.path.abspath(input_directory),
-            "collider_sha256": file_sha256(os.path.join(input_directory, "collider_mesh_url.glb")),
+            "collider_sha256": (file_sha256(os.path.join(input_directory, "collider_mesh_url.glb"))
+                                if os.path.exists(os.path.join(input_directory, "collider_mesh_url.glb")) else None),
+            "splats_sha256": (file_sha256(os.path.join(input_directory, "splats.spz"))
+                              if os.path.exists(os.path.join(input_directory, "splats.spz")) else None),
+            "geometry_source": world_record.get("geometry_source", "collider"),
             "world_json_sha256": file_sha256(os.path.join(input_directory, "world.json")),
             "hole_fraction": grid["hole_fraction"],
             "trail_source": ("trail.json" if os.path.exists(override_path)

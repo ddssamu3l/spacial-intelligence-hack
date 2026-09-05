@@ -3,101 +3,96 @@
  "frame": "mujoco: x,y horizontal meters, z up meters, ground near z=0",
  "heightfield": {
   "origin_xy": [
-   -117.4901351928711,
-   -80.17675018310547
+   -133.375,
+   -116.0
   ],
-  "resolution_meters": 0.05,
+  "resolution_meters": 0.15,
   "shape_rows_columns": [
-   2509,
-   3162
+   1116,
+   1194
   ]
  },
  "trail_points_xyz_meters": [
   [
-   -1.3401,
-   -9.4268,
-   -1.2024
+   1.475,
+   -1.25,
+   2.4175
   ],
   [
-   0.0099,
-   -9.4268,
-   -1.3114
+   3.425,
+   -2.15,
+   3.7855
   ],
   [
-   1.9099,
-   -9.3768,
-   -0.7366
+   5.225,
+   -3.05,
+   4.6424
   ],
   [
-   4.3599,
-   -8.9268,
-   2.1025
+   7.325,
+   -3.35,
+   7.3871
   ],
   [
-   6.5599,
-   -7.5768,
-   5.4946
+   9.125,
+   -3.65,
+   9.675
   ],
   [
-   8.3599,
-   -6.1268,
-   7.8599
+   10.025,
+   -2.9,
+   12.6
   ],
   [
-   9.8099,
-   -4.6768,
-   10.3096
+   10.625,
+   -1.7,
+   18.3219
   ],
   [
-   10.9099,
-   -3.2268,
-   16.4292
+   11.225,
+   -0.65,
+   20.6938
   ],
   [
-   11.4599,
-   -2.1268,
-   19.0224
-  ],
-  [
-   11.8099,
-   -1.5268,
-   19.0288
+   11.675,
+   0.1,
+   21.8484
   ]
  ],
  "anchor_points_xyz_meters": [
   [
-   -1.3401,
-   -9.4268,
-   -0.6024
+   1.475,
+   -1.25,
+   3.0175
   ],
   [
-   4.3599,
-   -8.9268,
-   2.7025
+   5.225,
+   -3.05,
+   5.2424
   ],
   [
-   8.3599,
-   -6.1268,
-   8.4599
+   9.125,
+   -3.65,
+   10.275
   ],
   [
-   11.8099,
-   -1.5268,
-   19.6288
+   11.675,
+   0.1,
+   22.4484
   ]
  ],
  "rope_height_meters": 0.6,
  "spawn": {
   "xy_meters": [
-   -1.3401,
-   -9.4268
+   1.475,
+   -1.25
   ],
-  "heading_radians": 0.541
+  "heading_radians": 0.1316
  },
  "goal": {
   "xy_meters": [
-   11.8099,
-   -1.5268
+   11.675,
+   0.1
   ],
   "radius_meters": 1.0
  },
@@ -107,9 +102,11 @@
   "script_version": "2026-09-05.1",
   "input_directory": "/Users/dengjingxi/Documents/code/spacial-intelligence-hack/world_meshes/himalayan_glacier",
   "collider_sha256": "8a6909590030bc4a3f2116b8601dbb7d0668299d247e376a356a4ad7bd6d3c04",
-  "world_json_sha256": "6cbbf76928d2cc5c19655495a10ca99d4a290fb1d6b0109dea656f87cb9af702",
-  "hole_fraction": 0.35941956206234404,
+  "splats_sha256": "3d3e8aab1a63fb9fad8849907086221434030166d056d1798438eb1fdf65320c",
+  "geometry_source": "splats",
+  "world_json_sha256": "7bf97bb4bf4962564476135b938db337cd9497462826dffa3c5d51a13d630794",
+  "hole_fraction": 0.8586758463764461,
   "trail_source": "trail.json",
-  "origin_distance_meters": 9.42675534471425
+  "origin_distance_meters": 1.9334231300985263
  }
 }

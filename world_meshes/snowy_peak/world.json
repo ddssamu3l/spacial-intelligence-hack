@@ -1,0 +1,27 @@
+{
+ "world_id": "console-download-snowy-peak",
+ "frame": "gltf_y_up",
+ "assets": {
+  "splats": {
+   "semantics_metadata": {
+    "metric_scale_factor": 1.0,
+    "ground_plane_offset": -1.2
+   }
+  }
+ },
+ "walkable_slope_limit_degrees": 60.0,
+ "crop_xy_meters": [
+  [
+   -60,
+   60
+  ],
+  [
+   -60,
+   60
+  ]
+ ],
+ "provenance_note": "Console download, metric Y-up; ground ~1 m under camera; cropped to the red-rope core (96% of rope splats within 60 m of origin), full world is 600x400 m of backdrop.",
+ "rope_color": "red",
+ "geometry_source": "splats",
+ "grid_resolution_meters": 0.15
+}

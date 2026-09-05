@@ -65,23 +65,40 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
     columns = np.clip(((mujoco[:, 0] - x0) / resolution).astype(int), 0, height.shape[1] - 1)
     above_ground = mujoco[:, 2] - height[rows, columns]
 
-    chroma = rgb.max(axis=1) - rgb.min(axis=1)
-    candidate = ((chroma > CHROMA_FLOOR) & (alpha > ALPHA_FLOOR)
+    rope_color = record.get("rope_color")
+    if rope_color == "red":
+        colored = (rgb[:, 0] - np.maximum(rgb[:, 1], rgb[:, 2])) > 0.10
+    elif rope_color == "blue":
+        colored = (rgb[:, 2] - np.maximum(rgb[:, 0], rgb[:, 1])) > 0.10
+    else:
+        colored = (rgb.max(axis=1) - rgb.min(axis=1)) > CHROMA_FLOOR
+    candidate = (colored & (alpha > ALPHA_FLOOR)
                  & (above_ground > HEIGHT_BAND_METERS[0])
                  & (above_ground < HEIGHT_BAND_METERS[1]))
     points = mujoco[candidate]
-    print(f"[rope] {candidate.sum()} saturated surface-hugging splats")
+    # how strongly each splat matches the rope color -- the crisp rope is far
+    # more saturated than color bleed on nearby snow; squared, it dominates
+    # the voxel centerline means below.
+    saturation = (rgb.max(axis=1) - rgb.min(axis=1))[candidate].astype(np.float64)
+    print(f"[rope] {candidate.sum()} {rope_color or 'saturated'} surface-hugging splats")
 
+    # The linearity gate exists to reject saturated ROCK on mixed worlds; a
+    # world that declares its rope color has no confounder, and the gate only
+    # shreds the line's thick sections (coils, anchors) into fragments.
+    apply_linearity = record.get("rope_linearity", rope_color is None)
     tree = cKDTree(points)
-    linear = np.zeros(len(points), bool)
-    for index, neighbors in enumerate(tree.query_ball_point(points, LINEARITY_RADIUS_METERS,
-                                                            workers=1)):
+    linear = np.ones(len(points), bool) if not apply_linearity \
+        else np.zeros(len(points), bool)
+    for index, neighbors in enumerate(
+            tree.query_ball_point(points, LINEARITY_RADIUS_METERS, workers=1)
+            if apply_linearity else []):
         if len(neighbors) < 4:
             continue
         centered = points[neighbors] - points[neighbors].mean(axis=0)
         eigenvalues = np.linalg.eigvalsh(centered.T @ centered / len(neighbors))
         linear[index] = eigenvalues[-1] / max(eigenvalues.sum(), 1e-9) > LINEARITY_SHARE
     points = points[linear]
+    saturation = saturation[linear]
     print(f"[rope] {linear.sum()} locally line-shaped")
 
     tree = cKDTree(points[:, :2])
@@ -96,6 +113,7 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
     labels = np.array([find(i) for i in range(len(points))])
     camera_chain = labels == labels[int(np.argmin(np.linalg.norm(points[:, :2], axis=1)))]
     chain = points[camera_chain]
+    chain_weight = saturation[camera_chain] ** 2
     print(f"[rope] camera chain: {camera_chain.sum()} splats, "
           f"z {chain[:, 2].min():.1f}..{chain[:, 2].max():.1f} m")
 
@@ -103,9 +121,15 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
     # into one averaged point and tears the chain apart in z.
     voxel = np.round(chain / VOXEL_METERS).astype(int)
     centers = {}
-    for key, point in zip(map(tuple, voxel), chain):
-        centers.setdefault(key, []).append(point)
-    collapsed = np.array([np.mean(group, axis=0) for group in centers.values()])
+    for key, point, weight in zip(map(tuple, voxel), chain, chain_weight):
+        centers.setdefault(key, []).append((point, weight))
+    collapsed = np.array([
+        np.average([point for point, _ in group], axis=0,
+                   weights=[weight for _, weight in group])
+        for group in centers.values()])
+    voxel_saturation = np.array([np.mean([weight for _, weight in group])
+                                 for group in centers.values()])
+    voxel_saturation /= voxel_saturation.max()
     print(f"[rope] {len(collapsed)} centerline voxels at {VOXEL_METERS} m "
           f"(twin ropes merged)")
 
@@ -117,8 +141,13 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
     # ~10 xy-metres from the base, and 2-D edges shortcut straight up the
     # cliff (measured: a 4-waypoint, 11 m 'route' for a 22 m climb).
     edge_tree = cKDTree(collapsed)
-    start = int(np.argmin(collapsed[:, 2]))
+    # Marble worlds are shot FROM the route: the camera origin is the one
+    # point guaranteed to be on the path, so the rope starts there.
+    start = int(np.argmin(np.linalg.norm(collapsed[:, :2], axis=1)))
     summit = int(np.argmax(collapsed[:, 2]))
+    print(f"[rope] start voxel {collapsed[start].round(1)} "
+          f"({np.linalg.norm(collapsed[start, :2]):.1f} m from camera), "
+          f"summit voxel {collapsed[summit].round(1)}")
     best = np.full(len(collapsed), np.inf)
     came_from = np.full(len(collapsed), -1)
     best[start] = 0.0
@@ -131,7 +160,10 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
             continue
         for neighbor in edge_tree.query_ball_point(collapsed[node],
                                                    EDGE_RADIUS_METERS, workers=1):
-            step = float(np.linalg.norm(collapsed[neighbor] - collapsed[node]))
+            # distance scaled by how faint the voxel's rope color is: the
+            # route prefers the intensely-colored rope over color bleed.
+            step = float(np.linalg.norm(collapsed[neighbor] - collapsed[node])
+                         * (1.0 + 4.0 * (1.0 - voxel_saturation[neighbor])))
             if cost + step < best[neighbor]:
                 best[neighbor] = cost + step
                 came_from[neighbor] = node

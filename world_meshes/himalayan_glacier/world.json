@@ -10,5 +10,8 @@
   }
  },
  "provenance_note": "Teammate console download (already metric, Y-up). Scale 1.0 assumed; ground measured 1.0-1.3 m below camera origin, offset -1.1 anchors it near z=0.",
- "walkable_slope_limit_degrees": 60.0
+ "walkable_slope_limit_degrees": 60.0,
+ "geometry_source": "splats",
+ "grid_resolution_meters": 0.15,
+ "rope_color": "red"
 }

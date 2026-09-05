@@ -1,0 +1,127 @@
+{
+ "episode_name": "snowy_peak",
+ "frame": "mujoco: x,y horizontal meters, z up meters, ground near z=0",
+ "heightfield": {
+  "origin_xy": [
+   -59.96875,
+   -59.96875
+  ],
+  "resolution_meters": 0.15,
+  "shape_rows_columns": [
+   801,
+   801
+  ]
+ },
+ "trail_points_xyz_meters": [
+  [
+   0.1812,
+   1.8312,
+   1.6639
+  ],
+  [
+   0.3312,
+   3.4812,
+   2.2469
+  ],
+  [
+   0.3312,
+   5.4312,
+   2.7577
+  ],
+  [
+   0.3312,
+   7.8312,
+   3.6023
+  ],
+  [
+   0.3312,
+   9.7812,
+   4.3105
+  ],
+  [
+   -0.2688,
+   11.8812,
+   4.9203
+  ],
+  [
+   -1.3188,
+   14.1312,
+   5.5094
+  ],
+  [
+   -2.2188,
+   16.5312,
+   6.3422
+  ],
+  [
+   -3.5688,
+   19.3812,
+   7.2586
+  ],
+  [
+   -4.7688,
+   22.3812,
+   8.8212
+  ],
+  [
+   -5.6688,
+   24.9312,
+   10.0805
+  ],
+  [
+   -6.1187,
+   27.0312,
+   11.5203
+  ]
+ ],
+ "anchor_points_xyz_meters": [
+  [
+   0.1812,
+   1.8312,
+   2.2639
+  ],
+  [
+   0.3312,
+   9.7812,
+   4.9105
+  ],
+  [
+   -4.7688,
+   22.3812,
+   9.4212
+  ],
+  [
+   -6.1187,
+   27.0312,
+   12.1203
+  ]
+ ],
+ "rope_height_meters": 0.6,
+ "spawn": {
+  "xy_meters": [
+   0.1812,
+   1.8312
+  ],
+  "heading_radians": 1.8158
+ },
+ "goal": {
+  "xy_meters": [
+   -6.1187,
+   27.0312
+  ],
+  "radius_meters": 1.0
+ },
+ "wind_speed_meters_per_second": 0.0,
+ "time_limit_seconds": 60.0,
+ "provenance": {
+  "script_version": "2026-09-05.1",
+  "input_directory": "/Users/dengjingxi/Documents/code/spacial-intelligence-hack/world_meshes/snowy_peak",
+  "collider_sha256": "3565907344b1949133a31d63bcd731bfa5581d2aaa78e4572eb27961c614afda",
+  "splats_sha256": "5eefdebec8cb2c8011e3f833b937798ef356712b497312ed76e9a6b363618467",
+  "geometry_source": "splats",
+  "world_json_sha256": "83e74a4b3a52ed672e0910d6835a6538282be945cb67b35b7e9060436ff8b689",
+  "hole_fraction": 0.864071284178173,
+  "trail_source": "trail.json",
+  "origin_distance_meters": 1.8401978494172817
+ }
+}
