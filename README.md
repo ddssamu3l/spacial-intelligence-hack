@@ -56,3 +56,13 @@ Headless policy measurement:
 4. Anchored rope segments + re-clip at bends
 5. Episode format (trail polyline, wind, spawn, goal) + batch runner + grading
 6. Generated-world replays in the 3-D viewer
+
+## Status 2026-09-05 (pre-hack night)
+
+Steps 1-6 all work end-to-end on the two test worlds: `marble_*` worlds appear
+in the app dropdown, the terrain renders from the episode heightfield, the
+rope draws as the laid polyline, and W drives Mrinal 2 on it (untrained on
+real terrain / turning ropes: it stands, holds the ratchet, creeps -- honest).
+Scene GLBs are gitignored; regenerate with
+`python -m app.harness.export_scene --world marble_<name>` after building
+episodes. App runs on ports 8775/8776 (`--port 8775`).
