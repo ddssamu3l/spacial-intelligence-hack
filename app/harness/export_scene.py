@@ -62,6 +62,7 @@ the stride that was used.
 import argparse
 import json
 import os
+import shutil
 import struct
 import sys
 
@@ -940,6 +941,23 @@ def export_world(world_name, output_directory=SCENE_ASSETS_DIRECTORY,
                            "geoms": len(children)})
         root_nodes.append(node)
 
+    # A COMPLETE textured GLB (e.g. baked + exported from Blender, Z-up) can
+    # sit next to the built episode as decoration.glb. Our writer cannot carry
+    # textures, so it is not merged -- it is copied whole and the viewer loads
+    # it as a second scene layer with GLTFLoader, which reads textures natively.
+    decoration_glb_url = None
+    decoration_directory = definition.get("built_directory")
+    decoration_glb_path = (os.path.join(decoration_directory, "decoration.glb")
+                           if decoration_directory else None)
+    if decoration_glb_path and os.path.exists(decoration_glb_path):
+        copied_name = f"{world_name}__decor.glb"
+        shutil.copyfile(decoration_glb_path,
+                        os.path.join(output_directory, copied_name))
+        decoration_glb_url = f"/app/harness/scene_assets/{copied_name}"
+        print(f"[export]   decoration.glb: "
+              f"{os.path.getsize(decoration_glb_path) / 1e6:.1f} MB copied whole "
+              f"(textured layer, loaded by the viewer directly)")
+
     glb_path = os.path.join(output_directory, f"{world_name}.glb")
     total_bytes = builder.write(glb_path, root_nodes)
 
@@ -982,6 +1000,7 @@ def export_world(world_name, output_directory=SCENE_ASSETS_DIRECTORY,
         "terrain": (dict(terrain_report, **(terrain_bounds or {}))
                     if terrain_report else None),
         "terrain_nodes": terrain_node_names,
+        "decoration_glb": decoration_glb_url,
         # Display-only: the measured Lhotse relief laid over a smooth physics
         # ground. Null on worlds whose ground already has shape of its own.
         "snow_shell": snow_report,

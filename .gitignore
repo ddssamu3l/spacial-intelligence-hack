@@ -28,3 +28,4 @@ assets/robots/g1/_menagerie
 # spacial-intelligence-hack additions
 .env
 marble/worlds/
+built_worlds/*/decoration.glb

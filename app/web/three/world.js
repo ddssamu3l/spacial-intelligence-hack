@@ -556,6 +556,28 @@ export class World {
       }
     });
 
+    // The textured decoration layer (a complete GLB baked out of the world's
+    // source Blender scene, Z-up like everything else here). GLTFLoader reads
+    // its textures natively -- this is the path our own GLB writer cannot
+    // serve. Static scenery: added to the root, materials left untouched.
+    if (sidecar.decoration_glb) {
+      try {
+        const decorationBuffer = await (await fetch(
+          sidecar.decoration_glb, { cache: 'no-store' })).arrayBuffer();
+        const decorationGltf = await new Promise((resolve, reject) =>
+          new GLTFLoader().parse(decorationBuffer, '', resolve, reject));
+        decorationGltf.scene.traverse(object => {
+          if (!object.isMesh) return;
+          object.castShadow = true;
+          object.receiveShadow = true;
+          if (object.material) object.material.envMapIntensity = 0.6;
+        });
+        this.root.add(decorationGltf.scene);
+      } catch (error) {
+        console.warn('render3d: decoration GLB failed to load', error);
+      }
+    }
+
     this.heightField = this.terrainMeshes.length
       ? new TerrainHeightField(this.terrainMeshes) : null;
 
