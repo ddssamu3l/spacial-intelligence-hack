@@ -49,8 +49,12 @@ BUILT_WORLDS_DIRECTORY = os.path.join(REPOSITORY_ROOT, "built_worlds")
 
 SPAWN_ARC_METERS = 0.60   # palm starts this far up the rope, so the feet
                           # stand on solver-vetted corridor, not behind it
+# Mrinal 3 (the dr_probe checkpoint): domain-randomised, the strongest climber
+# measured in the old repo (+5.60 m / 15 s at 20 deg, standing) -- the right
+# default on terrain no policy trained on. Mrinal 2 final is
+# g1_ascender_slope20_final_2026-08-30_13-55-14.onnx if a fallback is wanted.
 DEFAULT_POLICY_RELATIVE_PATH = os.path.join(
-    "rl", "policies", "g1_ascender_slope20_final_2026-08-30_13-55-14.onnx")
+    "rl", "policies", "g1_ascender_slope20_dr_probe_2026-08-30_21-01-04.onnx")
 
 
 def quaternion_from_tangent(tangent: np.ndarray) -> np.ndarray:
