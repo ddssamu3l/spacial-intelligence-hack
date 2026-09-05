@@ -35,6 +35,10 @@ Headless policy measurement:
 
 ## Layout
 
+- `blender/` — editable Everest Blender scenes, photographed materials, terrain
+  data, renders, MCP build tools, and the first-person browser preview. See
+  [the Blender project guide](blender/README.md). Binary assets use Git LFS;
+  run `git lfs pull` after cloning.
 - `app/` — harness runtime, web viewer, hearing/vision, BMS bridge (from g1-himalayas)
 - `assets/` — G1 + ascender MJCF, rope_rail.py, humans, old environments
   (`_menagerie/` meshes and `.reference/` are on-disk but gitignored; regenerate

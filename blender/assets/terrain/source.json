@@ -1,0 +1,12 @@
+{
+  "source": "https://registry.opendata.aws/copernicus-dem/",
+  "product": "Copernicus GLO-30 public, 2021 release",
+  "role": "measured distant mountain backdrop",
+  "grid_spacing_m": 30,
+  "extent": [
+    86.79,
+    27.94,
+    86.999,
+    28.13
+  ]
+}

@@ -1,0 +1,1 @@
+{"name":"everest-first-person","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1 --port 4174 --strictPort","build":"vite build","test":"node --test tests/*.test.js"},"dependencies":{"@babylonjs/core":"9.25.0","@babylonjs/loaders":"9.25.0","@babylonjs/materials":"9.25.0","three":"0.180.0"},"devDependencies":{"@playwright/test":"^1.63.0","vite":"8.2.2"}}
