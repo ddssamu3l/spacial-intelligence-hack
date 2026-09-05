@@ -8,12 +8,15 @@ import json
 import math
 import os
 import tempfile
+import hashlib
 from pathlib import Path
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'exports'
 OUT.mkdir(exist_ok=True)
+export_name=os.environ.get('EVEREST_GLB_NAME','everest-original-full')
+include_sky=os.environ.get('EVEREST_GLB_SKY','1')=='1'
 scene = next(s for s in bpy.data.scenes if s.name.startswith('EVEREST |'))
 bpy.context.window.scene = scene
 scene.render.engine = 'CYCLES'
@@ -47,7 +50,8 @@ bake_dir.mkdir(parents=True, exist_ok=True)
 export_collection = bpy.data.collections.new('Original Everest — complete GLB')
 scene.collection.children.link(export_collection)
 export_objects = []
-report = {'source': 'outputs/everest-before-realism.blend', 'original_objects': len(original_objects), 'groups': [],
+report = {'source': str(Path(bpy.data.filepath).relative_to(ROOT)), 'source_sha256':hashlib.sha256(Path(bpy.data.filepath).read_bytes()).hexdigest(), 'original_objects': len(original_objects), 'groups': [],
+          'sky_mesh':include_sky,
           'units': 'meters', 'coordinate_system': 'glTF right-handed Y-up',
           'source_to_gltf': '(x, y, z) -> (x, z, -y)',
           'attribution': 'Contains modified Copernicus DEM GLO-30 (2021), European Union, DLR and Airbus. Poly Haven textures: CC0.',
@@ -89,7 +93,7 @@ for number, objects in enumerate(groups.values()):
         else:
             bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=.02)
             bpy.ops.object.mode_set(mode='OBJECT')
-        size = 4096 if source.name.startswith(('Foreground', 'Everest massif', 'Transition')) else 1024 if source.name.startswith(('Serac', 'Ice', 'Fractured')) else 512
+        size = 4096 if source.name.startswith(('Foreground', 'Everest massif', 'Transition')) else 1024 if source.name.startswith(('Serac', 'Ice', 'Fractured','Ascent ice')) else 512
         images = {}
         target_nodes = []
         for mat in mesh.materials:
@@ -154,16 +158,25 @@ out = nodes.new('ShaderNodeOutputMaterial'); emission = nodes.new('ShaderNodeEmi
 emission.inputs['Color'].default_value = (.0144, .0612, .1169, 1)
 links.new(emission.outputs[0], out.inputs['Surface'])
 sky_mat.use_backface_culling = False; sky.data.materials.append(sky_mat)
-export_objects.append(sky)
+if include_sky:
+    export_objects.append(sky)
+else:
+    bpy.data.objects.remove(sky,do_unlink=True)
 for ob in original_objects:
     if ob.type in {'CAMERA', 'LIGHT'}:
+        if ob.type=='LIGHT':
+            # Export the actual lamp energy, not a stale node emission value.
+            energy=ob.data.energy
+            ob.data=ob.data.copy()
+            ob.data.use_nodes=False
+            ob.data.energy=energy
         export_objects.append(ob)
 bpy.ops.object.select_all(action='DESELECT')
 for ob in export_objects:
     ob.hide_render = False; ob.hide_set(False); ob.select_set(True)
 scene['asset_attribution'] = report['attribution']
 scene['asset_limitations'] = report['limitations']
-destination = OUT / 'everest-original-full.glb'
+destination = OUT / (export_name+'.glb')
 bpy.ops.export_scene.gltf(filepath=str(destination), export_format='GLB', use_selection=True, use_active_scene=True,
     export_apply=False, export_yup=True, export_cameras=True, export_lights=True,
     export_animations=False, export_extras=True, export_materials='EXPORT',
@@ -171,7 +184,7 @@ bpy.ops.export_scene.gltf(filepath=str(destination), export_format='GLB', use_se
 report['exported_objects'] = len(export_objects)
 report['file'] = destination.name
 report['bytes'] = destination.stat().st_size
-(OUT / 'everest-original-full.json').write_text(json.dumps(report, indent=2))
+(OUT / (export_name+'.json')).write_text(json.dumps(report, indent=2))
 print('EXPORT_COMPLETE', json.dumps({'file': str(destination), 'bytes': report['bytes'], 'objects': len(export_objects)}), flush=True)
 if temporary:
     temporary.cleanup()

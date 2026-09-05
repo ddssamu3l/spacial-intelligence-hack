@@ -15,6 +15,7 @@ async function start(){
 }
 function applyCamera(){
   camera.position.set(walker.x,walker.y,walker.z);
+  $('#viewport').dataset.position=JSON.stringify([walker.x,walker.y,walker.z]);
   camera.lookAt(walker.x+Math.sin(walker.yaw)*Math.cos(walker.pitch),walker.y+Math.cos(walker.yaw)*Math.cos(walker.pitch),walker.z+Math.sin(walker.pitch));
 }
 function resize(){
@@ -31,7 +32,7 @@ async function main(){
   scene=new THREE.Scene();scene.background=new THREE.Color('#244864');scene.fog=new THREE.Fog('#59788b',4500,21000);
   camera=new THREE.PerspectiveCamera(66,innerWidth/innerHeight,.08,50000);camera.up.set(0,0,1);resize();
   const hemi=new THREE.HemisphereLight(0x99c4fa,0x6c5543,.22);hemi.position.set(0,0,1);scene.add(hemi);
-  sun=new THREE.DirectionalLight(0xffdeb0,4.2);sun.position.set(-75,-50,65);sun.target.position.set(0,30,0);sun.castShadow=true;
+  sun=new THREE.DirectionalLight(0xffe6cf,4.2);sun.position.set(-100,-46,85);sun.target.position.set(0,0,0);sun.castShadow=true;
   sun.shadow.mapSize.set(4096,4096);Object.assign(sun.shadow.camera,{left:-65,right:65,top:65,bottom:-65,near:1,far:320});sun.shadow.normalBias=.045;sun.shadow.bias=-.00005;scene.add(sun,sun.target);
   const [manifest,buffer,materialFor,hdr]=await Promise.all([
     fetch('/scene/scene.json').then(r=>{if(!r.ok)throw Error('Terrain manifest unavailable');return r.json();}),
@@ -47,6 +48,7 @@ async function main(){
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(floats(m.attributes.position),3));g.setAttribute('normal',new THREE.BufferAttribute(floats(m.attributes.normal),3));
     if(m.attributes.uv)g.setAttribute('uv',new THREE.BufferAttribute(floats(m.attributes.uv),2));
     if(m.attributes.snow)g.setAttribute('snow',new THREE.BufferAttribute(floats(m.attributes.snow),1));
+    if(m.attributes.mountainShade)g.setAttribute('mountainShade',new THREE.BufferAttribute(floats(m.attributes.mountainShade),1));
     g.setIndex(new THREE.BufferAttribute(indices(m.attributes.index),1));g.computeBoundingSphere();return g;
   });
   const matrix=new THREE.Matrix4();
@@ -78,7 +80,7 @@ async function main(){
       const strafe=Number(keys.has('KeyD'))-Number(keys.has('KeyA'));
       if(keys.has('ArrowLeft'))walker.yaw-=dt*1.2;if(keys.has('ArrowRight'))walker.yaw+=dt*1.2;
       walker.step(dt,forward,strafe,keys.has('ShiftLeft')||keys.has('ShiftRight'));applyCamera();
-      if(Math.hypot(walker.x-shadowX,walker.y-shadowY)>15){shadowX=walker.x;shadowY=walker.y;sun.target.position.set(shadowX,shadowY+25,0);sun.position.set(shadowX-75,shadowY-80,65);renderer.shadowMap.needsUpdate=true;}
+      if(Math.hypot(walker.x-shadowX,walker.y-shadowY)>15){shadowX=walker.x;shadowY=walker.y;const floor=groundHeight(ground,shadowX,shadowY);sun.target.position.set(shadowX,shadowY,floor);sun.position.set(shadowX-100,shadowY-46,floor+85);renderer.shadowMap.needsUpdate=true;}
     }
     renderer.render(scene,camera);frames++;hud+=dt;
     if(hud>.25){hud=0;$('#position').textContent=`EAST RONGBUK · ${Math.round(walker.distance)} m walked`;$('#viewport').dataset.position=JSON.stringify([walker.x,walker.y,walker.z]);$('#viewport').dataset.frames=String(frames);$('#viewport').dataset.active=String(active);$('#viewport').dataset.look=JSON.stringify([walker.yaw,walker.pitch]);}

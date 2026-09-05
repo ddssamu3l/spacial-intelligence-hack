@@ -38,24 +38,25 @@ export async function createMaterials(renderer,onProgress) {
     const key=kind+hasSnow;if(cache.has(key))return cache.get(key);
     const mat=new THREE.MeshStandardMaterial({roughness:kind==='ice'?.55:.88,color:kind==='red'?0xa42d1b:kind==='metal'?0x87929b:0xffffff,metalness:kind==='metal'?.65:0,side:kind==='red'?THREE.DoubleSide:THREE.FrontSide});
     mat.name=name;
+    mat.defaultAttributeValues={color:[1,1,1],uv:[0,0],uv1:[0,0],mountainShade:[1]};
     if(kind==='red'||kind==='metal'){cache.set(key,mat);return mat;}
     mat.customProgramCacheKey=()=>key;
     mat.onBeforeCompile=shader=>{
       Object.assign(shader.uniforms,{snowDiffuse:{value:maps.snow_02.diff},rockDiffuse:{value:maps.rock_boulder_cracked.diff},groundDiffuse:{value:maps.aerial_rocks_02.diff},snowRough:{value:maps.snow_02.rough},rockRough:{value:maps.rock_boulder_cracked.rough}});
-      shader.vertexShader=`varying vec3 vAlpinePosition;varying vec3 vAlpineNormal;varying float vSnow;${hasSnow?'attribute float snow;':''}\n`+shader.vertexShader;
+      shader.vertexShader=`varying vec3 vAlpinePosition;varying vec3 vAlpineNormal;varying float vSnow;varying float vMountainShade;${kind==='mountain'?'attribute float mountainShade;':''}${hasSnow?'attribute float snow;':''}\n`+shader.vertexShader;
       shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
         vec4 alpinePos=vec4(position,1.);vec3 alpineNorm=normal;
         #ifdef USE_INSTANCING
         alpinePos=instanceMatrix*alpinePos;alpineNorm=mat3(instanceMatrix)*alpineNorm;
         #endif
-        vAlpinePosition=(modelMatrix*alpinePos).xyz;vAlpineNormal=normalize(mat3(modelMatrix)*alpineNorm);vSnow=${hasSnow?'snow':'0.'};`);
-      shader.fragmentShader=`varying vec3 vAlpinePosition;varying vec3 vAlpineNormal;varying float vSnow;uniform sampler2D snowDiffuse,rockDiffuse,groundDiffuse,snowRough,rockRough;${noiseCode}\n`+shader.fragmentShader;
+        vAlpinePosition=(modelMatrix*alpinePos).xyz;vAlpineNormal=normalize(mat3(modelMatrix)*alpineNorm);vSnow=${hasSnow?'snow':'0.'};vMountainShade=${kind==='mountain'?'mountainShade':'1.'};`);
+      shader.fragmentShader=`varying vec3 vAlpinePosition;varying vec3 vAlpineNormal;varying float vSnow;varying float vMountainShade;uniform sampler2D snowDiffuse,rockDiffuse,groundDiffuse,snowRough,rockRough;${noiseCode}\n`+shader.fragmentShader;
       const common=`vec3 p=vAlpinePosition;vec3 wn=normalize(vAlpineNormal);float relief=0.;vec3 alpineColor;`;
       const color={
         snow:`alpineColor=tri(snowDiffuse,p*.32,wn);relief=dot(alpineColor,vec3(.333))*.023;`,
         rock:`vec3 rc=tri(rockDiffuse,p*.55,wn);alpineColor=mix(vec3(dot(rc,vec3(.2126,.7152,.0722))),rc,.45)*.65;relief=dot(rc,vec3(.333))*.018;`,
         ground:`vec3 rc=tri(groundDiffuse,p*.23,wn);rc=mix(vec3(dot(rc,vec3(.2126,.7152,.0722))),rc,.5)*.65;vec3 sc=tri(snowDiffuse,p*.35,wn);alpineColor=mix(rc,sc,clamp(vSnow,0.,1.));relief=dot(alpineColor,vec3(.333))*.018;`,
-        mountain:`float n=fbm(p*vec3(.025,.025,.055));float snowCover=smoothstep(.86,.99,wn.z+n*.15);alpineColor=mix(mix(vec3(.028,.032,.038),vec3(.16,.14,.12),n),vec3(.88,.93,1.),snowCover);relief=n*1.2;`,
+        mountain:`float bands=fbm(p*vec3(.007,.007,.045));float crags=fbm(p*.06);float snowCover=${hasSnow?'smoothstep(.22,.80,vSnow+(crags-.5)*.5)':'smoothstep(.69,.93,wn.z)'};vec3 photo=tri(rockDiffuse,p*.045,wn);vec3 stone=mix(vec3(dot(photo,vec3(.2126,.7152,.0722))),photo,.15)*.36;vec3 snowColor=vec3(.82,.88,.95)*(.84+.16*crags);alpineColor=mix(stone,snowColor,snowCover)*vMountainShade;relief=crags*1.75+bands*.3;`,
         ice:`float n=fbm(p*vec3(1.5,1.3,9.));float crust=smoothstep(.26,.64,wn.z);alpineColor=mix(mix(vec3(.18,.38,.46),vec3(.69,.84,.88),n),vec3(.8,.87,.94),crust);relief=n*.035+noise3(p*24.)*.006;`
       }[kind];
       shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',common+color+'diffuseColor.rgb*=alpineColor;');
