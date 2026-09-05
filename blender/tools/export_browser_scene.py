@@ -1,11 +1,14 @@
-import bpy, json, struct
+import bpy, json, struct, math
 from pathlib import Path
 import numpy as np
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'browser-scene/public/scene';OUT.mkdir(parents=True,exist_ok=True)
 scene=bpy.data.scenes['EVEREST | East Rongbuk — visual study'];bpy.context.window.scene=scene
 deps=bpy.context.evaluated_depsgraph_get()
-manifest={'meshes':[],'groups':[],'lights':[],'spawn':[-1.4,-12,1.75],'coordinateSystem':'Blender Z up','sources':'../README.md'}
+camera=scene.camera
+forward=camera.matrix_world.to_quaternion()@__import__('mathutils').Vector((0,0,-1))
+aspect=(scene.render.resolution_x*scene.render.pixel_aspect_x)/(scene.render.resolution_y*scene.render.pixel_aspect_y)
+manifest={'meshes':[],'groups':[],'lights':[],'spawn':list(camera.location),'camera':{'fov':2*math.atan(math.tan(camera.data.angle_x/2)/aspect),'direction':list(forward)},'coordinateSystem':'Blender Z up','sources':'../README.md'}
 blob=bytearray();cache={}
 def array(a,dtype):
     a=np.asarray(a,dtype=dtype).reshape(-1)
@@ -51,7 +54,9 @@ manifest['ground']={'nx':361,'ny':401,'xmin':-90,'ymin':-45,'step':.5,'heights':
 # Conservative cylinder proxies keep the walker outside major boulders and ice.
 obstacles=[]
 for colname in ['03 • fractured glacier ice','04 • stones & boulders','07 • base camp trail details']:
-    for ob in bpy.data.collections[colname].objects:
+    collection=bpy.data.collections.get(colname)
+    if collection is None:continue
+    for ob in collection.objects:
         if ob.hide_render or 'snow cap' in ob.name or 'scree' in ob.name:continue
         corners=[ob.matrix_world@__import__('mathutils').Vector(c) for c in ob.bound_box]
         lo=np.min(np.array([list(c) for c in corners]),axis=0);hi=np.max(np.array([list(c) for c in corners]),axis=0)

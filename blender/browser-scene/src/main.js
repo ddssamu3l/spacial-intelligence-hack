@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {createMaterials} from './materials.js';
-import {Walker} from './walker.js';
+import {Walker,groundHeight} from './walker.js';
 import {RGBELoader} from 'three/addons/loaders/RGBELoader.js';
 import './style.css';
 const $=s=>document.querySelector(s),keys=new Set();
@@ -40,7 +40,7 @@ async function main(){
     new RGBELoader().loadAsync('/lighting/alpine-daylight.hdr')
   ]);
   hdr.mapping=THREE.EquirectangularReflectionMapping;
-  scene.background=hdr;scene.backgroundRotation.x=Math.PI/2;scene.backgroundIntensity=.7;
+  scene.background=new THREE.Color('#204860');
   const pmrem=new THREE.PMREMGenerator(renderer);scene.environment=pmrem.fromEquirectangular(hdr).texture;scene.environmentRotation.x=Math.PI/2;scene.environmentIntensity=.48;pmrem.dispose();
   const floats=a=>new Float32Array(buffer,a.offset,a.count),indices=a=>new Uint32Array(buffer,a.offset,a.count);
   const geometries=manifest.meshes.map(m=>{
@@ -63,7 +63,10 @@ async function main(){
     }
   }
   const ground={...manifest.ground,values:floats(manifest.ground.heights)};
-  walker=new Walker(ground,manifest.obstacles);applyCamera();
+  const spawn=manifest.spawn,direction=manifest.camera?.direction;
+  walker=new Walker(ground,manifest.obstacles,direction?{spawn:spawn.slice(0,2),eyeHeight:spawn[2]-groundHeight(ground,spawn[0],spawn[1]),yaw:Math.atan2(direction[0],direction[1]),pitch:Math.asin(direction[2])}:{});
+  if(manifest.camera){camera.fov=THREE.MathUtils.radToDeg(manifest.camera.fov);camera.updateProjectionMatrix();}
+  applyCamera();
   $('#loading').textContent='Preparing daylight…';
   await renderer.compileAsync(scene,camera);renderer.shadowMap.needsUpdate=true;renderer.render(scene,camera);
   ready=true;$('#start').disabled=false;$('#start').textContent='Start walking →';$('#loading').textContent='At the camp trail · follow the red markers';$('#viewport').dataset.loaded='true';
