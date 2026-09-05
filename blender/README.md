@@ -6,6 +6,28 @@ with Git LFS: run `git lfs install` and `git lfs pull` after cloning.
 
 A small, editable Blender scene built through Blender MCP, with a walking route between snow-covered moraine and glacier ice pinnacles. The camera frames roughly the first 100 metres of the reconstructed foreground against an Everest-area elevation backdrop.
 
+## Current mountain trail
+
+The original approach now leads directly into a continuous snowy ascent, about
+770 m along the marked route with 104 m of elevation gain. Its first incline
+starts roughly 50 m from the camera. Walk at 8 m/s or hold Shift for 20 m/s.
+Snow-covered boulders, ice shoulders, scree, and red markers continue up the
+same terrain mesh to the measured mountain flank.
+
+`outputs/everest-rongbuk-study.blend` and the browser geometry contain this
+extension, also exported as one file: `exports/everest-ascent-full.glb`
+(374 MB, embedded geometry and textures). The original
+`exports/everest-original-full.glb` and original 4K
+render remain the earlier published scene. New views are saved as
+`outputs/everest-approach.png`, `outputs/everest-lower-ascent.png`,
+`outputs/everest-upper-ascent.png`, and `outputs/everest-mountain-trail.png`.
+
+To reproduce from the original `outputs/everest-before-realism.blend`, run
+`tools/extend_ascent.py` once through Blender MCP, then
+`tools/remove_rear_plane.py`, `tools/refine_mountain_backdrop.py`, and
+`tools/export_browser_scene.py`.
+The extension script refuses to run twice on an already extended scene.
+
 ## First-person browser version
 
 Open **http://127.0.0.1:4174/** and click **Start walking**. WASD moves, the mouse looks around, Shift moves faster, and Escape pauses. See [browser-scene/README.md](browser-scene/README.md) for running and editing the navigable version.

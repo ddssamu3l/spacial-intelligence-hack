@@ -1,0 +1,13 @@
+{
+  "file": "everest-ascent-full.glb",
+  "bytes": 373707040,
+  "sha256": "6996194b75011f12342e23372d1cabd42f5e955624acc8f24cb8198d8b241269",
+  "source_mesh_objects": 7471,
+  "exported_mesh_nodes": 7471,
+  "shared_meshes": 111,
+  "embedded_images": 309,
+  "materials": 105,
+  "cameras": 1,
+  "lights": 1,
+  "external_resources": 0
+}

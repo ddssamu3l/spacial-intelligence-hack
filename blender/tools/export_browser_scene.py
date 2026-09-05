@@ -28,6 +28,8 @@ for col in scene.collection.children:
             attrs={'position':array(vs,'<f4'),'normal':array(ns,'<f4'),'index':array(ix,'<u4')}
             if 'SnowMask' in me.attributes:
                 a=np.empty(len(me.vertices),np.float32);me.attributes['SnowMask'].data.foreach_get('value',a);attrs['snow']=array(a,'<f4')
+            if 'MountainShade' in me.attributes:
+                a=np.empty(len(me.vertices),np.float32);me.attributes['MountainShade'].data.foreach_get('value',a);attrs['mountainShade']=array(a,'<f4')
             mats=[m.name for m in me.materials if m]
             if mats and mats[0].startswith('SCAN') and me.uv_layers:
                 # Expand corners so the scan's UV seams remain intact.
@@ -48,9 +50,14 @@ for col in scene.collection.children:
         group=manifest['groups'][cache[key]]
         group['transforms'].append([float(ob.matrix_world[row][column]) for column in range(4) for row in range(4)])
         group['names'].append(ob.name)
-fg=bpy.data.objects['Foreground | metre-scale moraine & wind-sculpted snow'].data
+ground_object=bpy.data.objects['Foreground | metre-scale moraine & wind-sculpted snow']
+fg=ground_object.data
 h=np.array([v.co.z for v in fg.vertices],dtype='<f4')
-manifest['ground']={'nx':361,'ny':401,'xmin':-90,'ymin':-45,'step':.5,'heights':array(h,'<f4')}
+manifest['ground']={**json.loads(ground_object.get('walk_grid','{"nx":361,"ny":401,"xmin":-90,"ymin":-45,"step":0.5}')),'heights':array(h,'<f4')}
+if 'walk_bounds' in ground_object:
+    manifest['ground']['bounds']=json.loads(ground_object['walk_bounds'])
+if 'trail_route' in scene:
+    manifest['route']=json.loads(scene['trail_route'])
 # Conservative cylinder proxies keep the walker outside major boulders and ice.
 obstacles=[]
 for colname in ['03 • fractured glacier ice','04 • stones & boulders','07 • base camp trail details']:

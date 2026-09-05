@@ -1,5 +1,11 @@
 # Original Everest scene — single-file export
 
+## Updated full scene
+
+The extended scene is exported separately as **`everest-ascent-full.glb`**.
+See [ASCENT.md](ASCENT.md) for its contents and viewing instructions.
+The original export documented below is retained as the earlier version.
+
 **`everest-original-full.glb`** is the complete restored scene shown in
 `../outputs/everest-rongbuk-4k.png`. Open this one file; no external textures,
 geometry buffers, or other downloads are required once the GLB is present.
@@ -24,13 +30,17 @@ far beyond the walking trail.
 `everest-original-full.json` records the exported object and material groups.
 It is documentation, not a dependency of the GLB.
 
+The active `everest-rongbuk-study.blend` now includes subsequent ascent work.
+This GLB remains the original published scene. Rebuild it from the preserved
+original source below, not from the extended study.
+
 ## Rebuild
 
 Run in a separate background Blender process so the editable scene remains
 unchanged:
 
 ```sh
-blender -b blender/outputs/everest-rongbuk-study.blend \
+blender -b blender/outputs/everest-before-realism.blend \
   --python blender/tools/export_original_glb.py
 ```
 
