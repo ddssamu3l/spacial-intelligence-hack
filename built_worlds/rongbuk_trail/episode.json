@@ -7851,7 +7851,7 @@
  "provenance": {
   "script_version": "2026-09-05.1",
   "input_directory": "/Users/dengjingxi/Documents/code/spacial-intelligence-hack/world_meshes/rongbuk_trail",
-  "collider_sha256": "a56a3b9da46f6f31cc363bc7e3fbb0177da52cfc0dab0ea379e271483759815b",
+  "collider_sha256": "b39728cf9096b1e4952b328c8d53d779ea460e5d6720ea6c08d4ef2f591aea83",
   "world_json_sha256": "cc646d692d80d78c2c384ca97cede34d404d05f902bf6477d0195f15fbeb7cae",
   "hole_fraction": 0.002702313133293721,
   "trail_source": "solver+endpoints.json",

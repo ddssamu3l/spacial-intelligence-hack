@@ -566,6 +566,18 @@ export class World {
           sidecar.decoration_glb, { cache: 'no-store' })).arrayBuffer();
         const decorationGltf = await new Promise((resolve, reject) =>
           new GLTFLoader().parse(decorationBuffer, '', resolve, reject));
+        // Blender exports glTF Y-up; the world here is Z-up. +90 deg about X
+        // maps (x, y, z)_gltf -> (x, -z, y) = the source Blender frame.
+        decorationGltf.scene.rotation.x = Math.PI / 2;
+        // Strip what fights the app: embedded sun (imports absurdly hot and
+        // stacks on ours), cameras, and the 45 km sky dome (our skybox + fog
+        // own the sky). Names from the export manifest.
+        const discard = [];
+        decorationGltf.scene.traverse(object => {
+          if (object.isLight || object.isCamera) discard.push(object);
+          else if ((object.name || '').toLowerCase().includes('sky')) discard.push(object);
+        });
+        discard.forEach(object => object.removeFromParent());
         decorationGltf.scene.traverse(object => {
           if (!object.isMesh) return;
           object.castShadow = true;
@@ -573,6 +585,11 @@ export class World {
           if (object.material) object.material.envMapIntensity = 0.6;
         });
         this.root.add(decorationGltf.scene);
+        // The GLB carries its own baked ground (with the trodden trail in its
+        // texture) at the same heights as the physics terrain -- hide ours so
+        // they cannot z-fight. TerrainHeightField reads vertex buffers, not
+        // visibility, so the chase camera still clears the ground.
+        for (const mesh of this.terrainMeshes) mesh.visible = false;
       } catch (error) {
         console.warn('render3d: decoration GLB failed to load', error);
       }

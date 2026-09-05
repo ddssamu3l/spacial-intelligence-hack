@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>everest-original-full.glb — raw mesh viewer</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b1420; overflow: hidden; }
+  #hud { position: fixed; top: 10px; left: 12px; color: #cfe0ee; z-index: 2;
+         font: 13px -apple-system, sans-serif; user-select: none; }
+  #hud b { color: #fff; }
+</style>
+</head>
+<body>
+<div id="hud"><b>everest-original-full.glb</b> — drag orbit · wheel zoom ·
+right-drag pan · <span id="status">loading 275 MB…</span></div>
+<script type="importmap">
+{ "imports": { "three": "/app/web/three/vendor/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from '/app/web/three/vendor/addons/loaders/GLTFLoader.js';
+
+const status = document.getElementById('status');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.85;   // snow scene; +/- keys adjust
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9db8d4);
+const sun = new THREE.DirectionalLight(0xfff2e0, 1.6);
+sun.position.set(200, 500, 300);
+scene.add(sun, new THREE.HemisphereLight(0xbcd4ee, 0x8a8a80, 0.55));
+
+// The GLB is glTF Y-up (Blender (x,y,z) -> (x,z,-y)); shown as exported.
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 60000);
+const target = new THREE.Vector3(0, 2, 16);   // trail area in glTF axes (z = -y_blender)
+let azimuth = -0.4, polar = 1.35, radius = 40;
+function placeCamera() {
+  camera.position.set(
+    target.x + radius * Math.sin(polar) * Math.sin(azimuth),
+    target.y + radius * Math.cos(polar),
+    target.z + radius * Math.sin(polar) * Math.cos(azimuth));
+  camera.lookAt(target);
+}
+placeCamera();
+
+new GLTFLoader().load('/blender/exports/everest-original-full.glb', gltf => {
+  // The GLB embeds its own sun; Blender W/m^2 imports absurdly hot in three.js
+  // and stacks with the rig above. Geometry and materials stay untouched.
+  const embeddedLights = [];
+  gltf.scene.traverse(object => { if (object.isLight) embeddedLights.push(object); });
+  embeddedLights.forEach(light => light.removeFromParent());
+  scene.add(gltf.scene);
+  const meshCount = (() => { let n = 0; gltf.scene.traverse(o => { if (o.isMesh) n++; }); return n; })();
+  status.textContent = `${meshCount} meshes loaded (${embeddedLights.length} embedded light muted) — geometry/materials untouched · +/- exposure`;
+}, progress => {
+  if (progress.total) status.textContent =
+    `loading… ${(progress.loaded / 1e6).toFixed(0)} / ${(progress.total / 1e6).toFixed(0)} MB`;
+}, error => { status.textContent = 'LOAD FAILED: ' + error; });
+
+let dragging = null;
+addEventListener('pointerdown', event => dragging = { x: event.clientX, y: event.clientY, button: event.button });
+addEventListener('pointerup', () => dragging = null);
+addEventListener('contextmenu', event => event.preventDefault());
+addEventListener('pointermove', event => {
+  if (!dragging) return;
+  const dx = event.clientX - dragging.x, dy = event.clientY - dragging.y;
+  dragging.x = event.clientX; dragging.y = event.clientY;
+  if (dragging.button === 2) {          // pan in the view plane
+    const scale = radius * 0.0016;
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+    const up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+    target.addScaledVector(right, -dx * scale).addScaledVector(up, dy * scale);
+  } else {
+    azimuth -= dx * 0.005;
+    polar = Math.min(1.55, Math.max(0.1, polar - dy * 0.005));
+  }
+  placeCamera();
+});
+addEventListener('wheel', event => {
+  radius = Math.min(3000, Math.max(2, radius * Math.exp(event.deltaY * 0.001)));
+  placeCamera();
+});
+addEventListener('keydown', event => {
+  if (event.key === '+' || event.key === '=') renderer.toneMappingExposure *= 1.12;
+  if (event.key === '-') renderer.toneMappingExposure /= 1.12;
+});
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+renderer.setAnimationLoop(() => renderer.render(scene, camera));
+</script>
+</body>
+</html>
