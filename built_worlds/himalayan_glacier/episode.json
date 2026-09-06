@@ -1,5 +1,6 @@
 {
  "episode_name": "himalayan_glacier",
+ "display_name": "Bergschrund at 6400m",
  "frame": "mujoco: x,y horizontal meters, z up meters, ground near z=0",
  "heightfield": {
   "origin_xy": [
@@ -14,39 +15,39 @@
  },
  "trail_points_xyz_meters": [
   [
-   -0.025,
+   0.875,
    1.9,
-   2.1771
+   2.5902
   ],
   [
-   1.025,
+   1.925,
    11.95,
-   14.5496
+   14.9906
   ]
  ],
  "anchor_points_xyz_meters": [
   [
-   -0.025,
+   0.875,
    1.9,
-   2.7771
+   3.1902
   ],
   [
-   1.025,
+   1.925,
    11.95,
-   15.1496
+   15.5906
   ]
  ],
  "rope_height_meters": 0.6,
  "spawn": {
   "xy_meters": [
-   -0.025,
+   0.875,
    1.9
   ],
   "heading_radians": 1.4667
  },
  "goal": {
   "xy_meters": [
-   1.025,
+   1.925,
    11.95
   ],
   "radius_meters": 1.0
@@ -59,10 +60,9 @@
   "collider_sha256": "8a6909590030bc4a3f2116b8601dbb7d0668299d247e376a356a4ad7bd6d3c04",
   "splats_sha256": "3d3e8aab1a63fb9fad8849907086221434030166d056d1798438eb1fdf65320c",
   "geometry_source": "splats",
-  "world_json_sha256": "7bf97bb4bf4962564476135b938db337cd9497462826dffa3c5d51a13d630794",
+  "world_json_sha256": "80ab7b028a98409c8b4b71bf87b2109d03f4ab989e32b1a7072bdb2d7967d68b",
   "hole_fraction": 0.8586758463764461,
   "trail_source": "trail.json",
-  "origin_distance_meters": 1.900164466565978
- },
- "display_name": "Bergschrund at 6400m"
+  "origin_distance_meters": 2.091799464575887
+ }
 }

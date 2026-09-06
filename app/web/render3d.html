@@ -1492,7 +1492,10 @@ document.addEventListener('visibilitychange', updateWindSound);
 
 // ---------- THE SOCKET ----------
 function connect() {
-  const url = 'ws://' + location.hostname + ':' + (Number(location.port) - 1);
+  // ?ws=wss://... lets a tunneled/public page reach the sim's own tunnel;
+  // the default stays the local convention (ws = page port - 1).
+  const wsOverride = new URLSearchParams(location.search).get('ws');
+  const url = wsOverride || ('ws://' + location.hostname + ':' + (Number(location.port) - 1));
   const socket = new WebSocket(url); socket.binaryType = 'arraybuffer'; state.socket = socket;
   socket.onopen = () => {
     $('status').classList.add('on'); $('statusText').textContent = 'live';

@@ -14,5 +14,7 @@
  "geometry_source": "splats",
  "grid_resolution_meters": 0.15,
  "rope_color": "red",
- "display_name": "Bergschrund at 6400m"
+ "display_name": "Bergschrund at 6400m",
+ "rope_z_adjust_meters": 0.0,
+ "rope_z_tilt_meters": 0.0
 }

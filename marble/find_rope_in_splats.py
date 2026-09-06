@@ -176,9 +176,17 @@ def main(spz_path: str, world_directory: str, built_directory: str) -> None:
             used[neighbors[distances < TRACE_STEP_METERS]] = True
             waypoints_list.append(position.copy())
         waypoints = np.array(waypoints_list)
-        start_z = chain[int(np.argmin(np.linalg.norm(chain[:, :2], axis=1))), 2]
+        # the stepping oscillates laterally around the strand (visible as
+        # zigzag against a straight rope) -- smooth at ~8 m scale, twice.
+        for _ in range(2):
+            if len(waypoints) >= 7:
+                waypoints = np.stack([
+                    np.convolve(np.pad(waypoints[:, axis], 3, mode="edge"),
+                                np.ones(7) / 7, mode="valid")
+                    for axis in (0, 1)], axis=1)
         length = np.linalg.norm(np.diff(waypoints, axis=0), axis=1).sum()
-        print(f"[rope] traced {len(waypoints)} steps, {length:.0f} m along the strand")
+        print(f"[rope] traced {len(waypoints_list)} steps, smoothed to "
+              f"{length:.0f} m along the strand")
         output_path = os.path.join(world_directory, "trail.json")
         json.dump({"trail_points_xy_meters": waypoints.round(3).tolist()},
                   open(output_path, "w"))

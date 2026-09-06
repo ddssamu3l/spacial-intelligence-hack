@@ -458,10 +458,21 @@ def build_episode(input_directory: str, output_directory: str) -> dict:
         print(f"[slope] world.json overrides walkable limit: {slope_limit:g} deg")
     slope_degrees, walkable = walkability(height, real, slope_limit, resolution)
 
+    trail_xyz = None
     override_path = os.path.join(input_directory, "trail.json")
     if os.path.exists(override_path):
         with open(override_path) as handle:
-            override_xy = np.asarray(json.load(handle)["trail_points_xy_meters"], dtype=np.float64)
+            override_record = json.load(handle)
+    else:
+        override_record = {}
+    if "trail_points_xyz_meters" in override_record:
+        # full-3D override: the rope's own splat positions carry better z than
+        # a holey heightfield (an inpaint smear once invented an 87 m cliff
+        # mid-rope and truncated the good half of the line)
+        trail_xyz = np.asarray(override_record["trail_points_xyz_meters"], np.float64)
+        print(f"[trail] hand override: {len(trail_xyz)} XYZ waypoints from trail.json")
+    elif "trail_points_xy_meters" in override_record:
+        override_xy = np.asarray(override_record["trail_points_xy_meters"], dtype=np.float64)
         x0, y0 = grid["origin_xy"]
         cells = np.stack([((override_xy[:, 1] - y0) / grid["resolution"]).astype(int),
                           ((override_xy[:, 0] - x0) / grid["resolution"]).astype(int)], axis=1)
@@ -481,14 +492,22 @@ def build_episode(input_directory: str, output_directory: str) -> dict:
         path_cells = solve_trail(height, slope_degrees, walkable, endpoint_cells,
                                  resolution)
 
-    trail_xyz = cells_to_world(path_cells, grid, height)
+    if trail_xyz is None:
+        trail_xyz = cells_to_world(path_cells, grid, height)
     origin_distance = float(np.linalg.norm(trail_xyz[:, :2], axis=1).min())
     print(f"[trail] closest approach to world origin (camera stood on the trail): "
           f"{origin_distance:.2f} m {'OK' if origin_distance < 2.0 else '** SUSPICIOUS — hand-check this world **'}")
 
     keep = simplify_polyline(trail_xyz[:, :2], ANCHOR_SIMPLIFY_TOLERANCE_METERS)
     anchors_xyz = trail_xyz[keep].copy()
-    anchors_xyz[:, 2] += ROPE_HEIGHT_METERS
+    anchors_xyz[:, 2] += ROPE_HEIGHT_METERS + float(
+        world_record.get("rope_z_adjust_meters", 0.0))  # visual trim when the
+        # splat surface and the heightfield disagree about where snow is
+    tilt = float(world_record.get("rope_z_tilt_meters", 0.0))
+    if tilt and len(anchors_xyz) > 1:
+        arc = np.concatenate([[0.0], np.cumsum(
+            np.linalg.norm(np.diff(anchors_xyz[:, :2], axis=0), axis=1))])
+        anchors_xyz[:, 2] += tilt * arc / arc[-1]   # 0 at base -> tilt at top
     segment_lengths = np.linalg.norm(np.diff(anchors_xyz, axis=0), axis=1)
     print(f"[rope] {len(anchors_xyz)} anchors, segment lengths "
           f"min {segment_lengths.min():.2f} / median {np.median(segment_lengths):.2f} / "
